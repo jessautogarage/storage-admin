@@ -63,9 +63,13 @@ export const useNotifications = () => {
   };
 
   const deleteNotification = async (notificationId) => {
-    setNotifications(prev => 
+    setNotifications(prev =>
       prev.filter(notification => notification.id !== notificationId)
     );
+  };
+
+  const deleteAllRead = async () => {
+    setNotifications(prev => prev.filter(notification => !notification.read));
   };
 
   const addNotification = (notification) => {
@@ -94,6 +98,7 @@ export const useNotifications = () => {
     markAsRead,
     markAllAsRead,
     deleteNotification,
+    deleteAllRead,
     addNotification
   };
 };
