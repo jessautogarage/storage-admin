@@ -1,104 +1,107 @@
 // src/hooks/useNotifications.js
 import { useState, useEffect } from 'react';
+import { realtimeDb } from '../services/firebase';
+import { ref, onValue, push, update, remove, get } from 'firebase/database';
+import { useAuth } from './useAuth';
 
 export const useNotifications = () => {
   const [notifications, setNotifications] = useState([]);
+  const [unreadCount, setUnreadCount] = useState(0);
+  const [loading, setLoading] = useState(true);
   const [soundEnabled, setSoundEnabled] = useState(true);
+  const { user } = useAuth();
 
-  // Sample notifications for testing
   useEffect(() => {
-    setNotifications([
-      {
-        id: 1,
-        title: 'New file uploaded',
-        message: 'document.pdf has been uploaded successfully',
-        type: 'Package',
-        icon: 'Package',
-        priority: 'normal',
-        read: false,
-        timestamp: Date.now() - 1000 * 60 * 5, // 5 minutes ago
-        actionUrl: '/files'
-      },
-      {
-        id: 2,
-        title: 'Storage quota warning',
-        message: 'You are using 85% of your storage space',
-        type: 'AlertCircle',
-        icon: 'AlertCircle',
-        priority: 'high',
-        read: false,
-        timestamp: Date.now() - 1000 * 60 * 60, // 1 hour ago
-        actionUrl: '/storage'
-      },
-      {
-        id: 3,
-        title: 'New user registered',
-        message: 'John Doe has joined your organization',
-        type: 'Users',
-        icon: 'Users',
-        priority: 'low',
-        read: true,
-        timestamp: Date.now() - 1000 * 60 * 60 * 24, // 1 day ago
-        actionUrl: '/users'
-      }
-    ]);
-  }, []);
+    if (!user) return;
 
-  const unreadCount = notifications.filter(n => !n.read).length;
+    const notificationsRef = ref(realtimeDb, 'adminNotifications');
+    let previousCount = 0;
+
+    const unsubscribe = onValue(notificationsRef, (snapshot) => {
+      const data = snapshot.val();
+      if (data) {
+        const notificationsList = Object.entries(data)
+          .map(([key, value]) => ({
+            id: key,
+            ...value
+          }))
+          .sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
+        
+        setNotifications(notificationsList);
+        const newUnreadCount = notificationsList.filter(n => !n.read).length;
+        
+        // Play sound for new notifications
+        if (soundEnabled && newUnreadCount > previousCount && previousCount !== 0) {
+          playNotificationSound();
+        }
+        
+        previousCount = newUnreadCount;
+        setUnreadCount(newUnreadCount);
+      } else {
+        setNotifications([]);
+        setUnreadCount(0);
+      }
+      setLoading(false);
+    });
+
+    return () => unsubscribe();
+  }, [user, soundEnabled]);
+
+  const playNotificationSound = () => {
+    try {
+      const audio = new Audio('/notification.mp3');
+      audio.volume = 0.5;
+      audio.play();
+    } catch (error) {
+      console.error('Error playing notification sound:', error);
+    }
+  };
 
   const markAsRead = async (notificationId) => {
-    setNotifications(prev => 
-      prev.map(notification => 
-        notification.id === notificationId 
-          ? { ...notification, read: true }
-          : notification
-      )
-    );
+    const notificationRef = ref(realtimeDb, `adminNotifications/${notificationId}`);
+    await update(notificationRef, { read: true });
   };
 
   const markAllAsRead = async () => {
-    setNotifications(prev => 
-      prev.map(notification => ({ ...notification, read: true }))
-    );
+    const updates = {};
+    notifications.forEach(notification => {
+      if (!notification.read) {
+        updates[`adminNotifications/${notification.id}/read`] = true;
+      }
+    });
+    
+    if (Object.keys(updates).length > 0) {
+      await update(ref(realtimeDb), updates);
+    }
   };
 
   const deleteNotification = async (notificationId) => {
-    setNotifications(prev =>
-      prev.filter(notification => notification.id !== notificationId)
-    );
+    const notificationRef = ref(realtimeDb, `adminNotifications/${notificationId}`);
+    await remove(notificationRef);
   };
 
   const deleteAllRead = async () => {
-    setNotifications(prev => prev.filter(notification => !notification.read));
-  };
-
-  const addNotification = (notification) => {
-    const newNotification = {
-      id: Date.now(),
-      timestamp: Date.now(),
-      read: false,
-      priority: 'normal',
-      ...notification
-    };
+    const updates = {};
+    notifications.forEach(notification => {
+      if (notification.read) {
+        updates[`adminNotifications/${notification.id}`] = null;
+      }
+    });
     
-    setNotifications(prev => [newNotification, ...prev]);
-    
-    // Play sound if enabled
-    if (soundEnabled) {
-      // You can add sound logic here
-      console.log('Notification sound would play');
+    if (Object.keys(updates).length > 0) {
+      await update(ref(realtimeDb), updates);
     }
   };
 
   return {
     notifications,
     unreadCount,
+    loading,
     soundEnabled,
     setSoundEnabled,
     markAsRead,
     markAllAsRead,
     deleteNotification,
-    deleteAllRead,
-    addNotification
+    deleteAllRead
   };
 };

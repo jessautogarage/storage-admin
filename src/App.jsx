@@ -13,11 +13,14 @@ import Announcements from './components/Announcements/Announcements';
 import Settings from './components/Settings/Settings';
 import PaymentManagement from './components/Payments/PaymentManagement';
 
+import LandingPage from './components/Landing/LandingPage';
+
 function App() {
   return (
     <AuthProvider>
       <Router>
         <Routes>
+          {/* <Route path="/" element={<LandingPage />} /> */}
           <Route path="/login" element={<AdminLogin />} />
           <Route path="/" element={
             <ProtectedRoute>
