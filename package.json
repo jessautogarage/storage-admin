@@ -9,6 +9,8 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "aos": "^2.3.4",
+    "bootstrap": "^5.3.7",
     "date-fns": "^3.6.0",
     "firebase": "^10.14.1",
     "firebase-admin": "^13.4.0",

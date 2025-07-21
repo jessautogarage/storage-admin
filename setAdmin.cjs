@@ -8,7 +8,7 @@ admin.initializeApp({
 });
 
 // Replace with actual UID from Firebase Auth > Users
-const uid = 'wHI9M2ucPUPhsrzCceluLNMMUP13';
+const uid = 'ZQc7Id35SUfFxGn55lO4pmqUOr23';
 
 admin
   .auth()

@@ -1,6 +1,6 @@
 // src/services/notificationService.js
 import { realtimeDb, db } from './firebase';
-import { ref, push, serverTimestamp, update, remove } from 'firebase/database';
+import { ref, push, serverTimestamp, update, remove, get } from 'firebase/database';
 import { collection, addDoc, serverTimestamp as firestoreTimestamp } from 'firebase/firestore';
 
 export const notificationService = {
