@@ -26,6 +26,7 @@ const Sidebar = () => {
     { path: '/payments', icon: DollarSign, label: 'Payments' },
     { path: '/announcements', icon: Bell, label: 'Announcements' },
     { path: '/settings', icon: SettingsIcon, label: 'Settings' },
+    { path: '/analytics', icon: BarChart3, label: 'Analytics' },
   ];
 
   const handleLogout = async () => {
