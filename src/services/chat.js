@@ -6,6 +6,7 @@ import {
   onValue, 
   serverTimestamp, 
   update,
+  child,
   get,
   set 
 } from 'firebase/database';
@@ -17,87 +18,66 @@ export const chatService = {
     const chatId = `chat_${userId}`;
     const chatRef = ref(realtimeDb, `chats/${chatId}`);
     
-    try {
-      // Check if chat exists in Realtime Database
-      const snapshot = await get(chatRef);
+    // Check if chat exists
+    const snapshot = await get(chatRef);
+    
+    if (!snapshot.exists()) {
+      // Create new chat
+      await set(chatRef, {
+        userId: userId,
+        userName: userInfo.name || 'User',
+        userEmail: userInfo.email,
+        userType: userInfo.type,
+        userPhone: userInfo.phone || null,
+        userAddress: userInfo.address || null,
+        createdAt: serverTimestamp(),
+        lastMessage: '',
+        lastMessageTime: serverTimestamp(),
+        status: 'active'
+      });
       
-      if (!snapshot.exists()) {
-        // Create new chat in Realtime Database
-        await set(chatRef, {
-          userId: userId,
-          userName: userInfo.name || 'User',
-          userEmail: userInfo.email,
-          userType: userInfo.type,
-          userPhone: userInfo.phone || null,
-          userAddress: userInfo.address || null,
-          createdAt: serverTimestamp(),
-          lastMessage: '',
-          lastMessageTime: serverTimestamp(),
-          status: 'active'
-        });
-        
-        // Also create in Firestore for better querying
-        try {
-          await setDoc(doc(db, 'chats', chatId), {
-            userId: userId,
-            userName: userInfo.name || 'User',
-            userEmail: userInfo.email,
-            userType: userInfo.type,
-            createdAt: firestoreTimestamp(),
-            lastMessage: '',
-            lastMessageTime: firestoreTimestamp(),
-            unreadCount: 0,
-            status: 'active'
-          });
-        } catch (firestoreError) {
-          console.error('Error creating chat in Firestore:', firestoreError);
-          // Continue even if Firestore fails
-        }
-      }
-      
-      return chatId;
-    } catch (error) {
-      console.error('Error in createOrGetChat:', error);
-      throw error;
+      // Also create/update in Firestore for better querying
+      await setDoc(doc(db, 'chats', chatId), {
+        userId: userId,
+        userName: userInfo.name || 'User',
+        userEmail: userInfo.email,
+        userType: userInfo.type,
+        createdAt: firestoreTimestamp(),
+        lastMessage: '',
+        lastMessageTime: firestoreTimestamp(),
+        unreadCount: 0,
+        status: 'active'
+      });
     }
+    
+    return chatId;
   },
 
   // Send a message
   async sendMessage(chatId, message, sender = 'admin') {
-    try {
-      const messagesRef = ref(realtimeDb, `chats/${chatId}/messages`);
-      const newMessage = await push(messagesRef, {
-        text: message,
-        sender,
-        timestamp: serverTimestamp(),
-        read: false
-      });
+    const messagesRef = ref(realtimeDb, `chats/${chatId}/messages`);
+    const newMessage = await push(messagesRef, {
+      text: message,
+      sender,
+      timestamp: serverTimestamp(),
+      read: false
+    });
 
-      // Update last message in chat metadata
-      const chatRef = ref(realtimeDb, `chats/${chatId}`);
-      await update(chatRef, {
-        lastMessage: message,
-        lastMessageTime: serverTimestamp()
-      });
+    // Update last message in chat metadata
+    const chatRef = ref(realtimeDb, `chats/${chatId}`);
+    await update(chatRef, {
+      lastMessage: message,
+      lastMessageTime: serverTimestamp()
+    });
 
-      // Also update Firestore for better querying (optional)
-      try {
-        const chatDocRef = doc(db, 'chats', chatId);
-        await updateDoc(chatDocRef, {
-          lastMessage: message,
-          lastMessageTime: firestoreTimestamp(),
-          unreadCount: sender === 'user' ? 1 : 0
-        });
-      } catch (firestoreError) {
-        console.error('Error updating Firestore:', firestoreError);
-        // Continue even if Firestore update fails
-      }
+    // Also update Firestore for better querying
+    await updateDoc(doc(db, 'chats', chatId), {
+      lastMessage: message,
+      lastMessageTime: firestoreTimestamp(),
+      unreadCount: sender === 'user' ? 1 : 0
+    });
 
-      return newMessage;
-    } catch (error) {
-      console.error('Error sending message:', error);
-      throw error;
-    }
+    return newMessage;
   },
 
   // Get chat messages
@@ -110,52 +90,34 @@ export const chatService = {
           id: key,
           ...value
         }));
-        callback(messages.sort((a, b) => (a.timestamp || 0) - (b.timestamp || 0)));
+        callback(messages.sort((a, b) => a.timestamp - b.timestamp));
       } else {
         callback([]);
       }
-    }, (error) => {
-      console.error('Error subscribing to messages:', error);
-      callback([]);
     });
   },
 
-  // Get all chats
+  // Get all chats with Firestore for better performance
   subscribeToChats(callback) {
     const chatsRef = ref(realtimeDb, 'chats');
     return onValue(chatsRef, (snapshot) => {
       const data = snapshot.val();
       if (data) {
-        const chats = [];
-        
-        // Process each chat
-        Object.entries(data).forEach(([chatId, chatData]) => {
-          // Skip if this is a nested path
-          if (typeof chatData !== 'object' || !chatData.userId) {
-            return;
-          }
-          
-          chats.push({
-            id: chatId,
-            chatId: chatId,
-            ...chatData,
-            lastMessage: chatData.lastMessage || '',
-            unreadCount: this.getUnreadCount(chatData.messages)
-          });
-        });
-        
-        // Filter and sort chats
-        const sortedChats = chats
+        const chats = Object.entries(data)
+          .filter(([key, value]) => !key.includes('/messages'))
+          .map(([key, value]) => ({
+            id: key,
+            chatId: key,
+            ...value,
+            lastMessage: value.lastMessage || '',
+            unreadCount: this.getUnreadCount(value.messages)
+          }))
           .filter(chat => chat.lastMessage) // Only show chats with messages
           .sort((a, b) => (b.lastMessageTime || 0) - (a.lastMessageTime || 0));
-          
-        callback(sortedChats);
+        callback(chats);
       } else {
         callback([]);
       }
-    }, (error) => {
-      console.error('Error subscribing to chats:', error);
-      callback([]);
     });
   },
 
@@ -166,34 +128,19 @@ export const chatService = {
 
   // Mark messages as read
   async markAsRead(chatId) {
-    try {
-      const messagesRef = ref(realtimeDb, `chats/${chatId}/messages`);
-      const snapshot = await get(messagesRef);
-      
-      if (snapshot.exists()) {
-        const updates = {};
-        Object.keys(snapshot.val()).forEach(key => {
-          updates[`${key}/read`] = true;
-        });
-        
-        if (Object.keys(updates).length > 0) {
-          const messagesRef = ref(realtimeDb, `chats/${chatId}/messages`);
-          await update(messagesRef, updates);
-        }
-      }
-
-      // Reset unread count in Firestore (optional)
-      try {
-        const chatDocRef = doc(db, 'chats', chatId);
-        await updateDoc(chatDocRef, {
-          unreadCount: 0
-        });
-      } catch (firestoreError) {
-        console.error('Error updating Firestore unread count:', firestoreError);
-        // Continue even if Firestore update fails
-      }
-    } catch (error) {
-      console.error('Error marking messages as read:', error);
+    const messagesRef = ref(realtimeDb, `chats/${chatId}/messages`);
+    const snapshot = await get(messagesRef);
+    if (snapshot.exists()) {
+      const updates = {};
+      Object.keys(snapshot.val()).forEach(key => {
+        updates[`${key}/read`] = true;
+      });
+      await update(messagesRef, updates);
     }
+
+    // Reset unread count in Firestore
+    await updateDoc(doc(db, 'chats', chatId), {
+      unreadCount: 0
+    });
   }
 };
