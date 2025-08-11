@@ -1,6 +1,3 @@
-import { ref, set } from 'firebase/database';
-import { database } from '../../firebaseConfig'; // adjust path if needed
-
 import React, { useState, useEffect } from 'react';
 import { 
   Users, 
@@ -17,13 +14,6 @@ import RevenueChart from './RevenueChart';
 import { useFirestore } from '../../hooks/useFirestore';
 import { format } from 'date-fns';
 
-const writeAdminNote = () => {
-  const noteRef = ref(database, 'adminNotes/jesrel');
-  set(noteRef, {
-    message: 'Dashboard loaded successfully.',
-    timestamp: new Date().toISOString()
-  });
-};
 
 const Dashboard = () => {
   const { data: users } = useFirestore('users');
@@ -85,8 +75,6 @@ const Dashboard = () => {
   // Combine and sort recent activities
   useEffect(() => {
     const activities = [];
-
-    writeAdminNote();
     
     // Recent users
     users.slice(0, 3).forEach(user => {

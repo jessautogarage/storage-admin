@@ -22,6 +22,37 @@ const ListingManagement = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState('all');
   const { data: listings, loading } = useFirestore('listings');
+
+  // Helper function to handle features from mobile app (map) or admin panel (array)
+  const displayFeatures = (features) => {
+    if (!features) return 'No features';
+    
+    if (Array.isArray(features)) {
+      return features.join(', ');
+    } else if (typeof features === 'object') {
+      // Handle mobile app format (map with boolean values)
+      return Object.entries(features)
+        .filter(([key, value]) => value === true)
+        .map(([key]) => key.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase()))
+        .join(', ') || 'No features';
+    }
+    return 'No features';
+  };
+
+  // Helper function to get features for editing
+  const getFeaturesForEdit = (features) => {
+    if (!features) return [];
+    
+    if (Array.isArray(features)) {
+      return features;
+    } else if (typeof features === 'object') {
+      // Convert mobile app format to admin panel format
+      return Object.entries(features)
+        .filter(([key, value]) => value === true)
+        .map(([key]) => key.replace(/_/g, ' '));
+    }
+    return [];
+  };
   
   const [formData, setFormData] = useState({
     title: '',
@@ -103,7 +134,7 @@ const ListingManagement = () => {
       size: listing.size || '',
       pricePerMonth: listing.pricePerMonth || '',
       pricePerDay: listing.pricePerDay || '',
-      features: listing.features || [],
+      features: getFeaturesForEdit(listing.features),
       images: listing.images || [],
       availability: listing.availability || 'available',
       status: listing.status || 'active',

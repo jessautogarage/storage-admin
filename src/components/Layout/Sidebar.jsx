@@ -1,6 +1,7 @@
 import React from 'react';
-import { DollarSign } from 'lucide-react';
+import { DollarSign, Warehouse } from 'lucide-react';
 import { NavLink } from 'react-router-dom';
+import LockifyHubLogo from '../Logo/LockifyHubLogo';
 import { 
   Home, 
   Users, 
@@ -10,7 +11,13 @@ import {
   Bell, 
   Settings as SettingsIcon,
   LogOut,
-  BarChart3
+  BarChart3,
+  Shield,
+  AlertCircle,
+  CreditCard,
+  Star,
+  CheckCircle,
+  FileText
 } from 'lucide-react';
 import { useAuth } from '../../hooks/useAuth';
 
@@ -18,15 +25,21 @@ const Sidebar = () => {
   const { logout } = useAuth();
 
   const menuItems = [
-    { path: '/', icon: Home, label: 'Dashboard' },
+    { path: '/dashboard', icon: Home, label: 'Dashboard' },
     { path: '/users', icon: Users, label: 'Users' },
     { path: '/listings', icon: Package, label: 'Listings' },
     { path: '/bookings', icon: Calendar, label: 'Bookings' },
     { path: '/chat', icon: MessageSquare, label: 'Chat Support' },
     { path: '/payments', icon: DollarSign, label: 'Payments' },
-    { path: '/announcements', icon: Bell, label: 'Announcements' },
-    { path: '/settings', icon: SettingsIcon, label: 'Settings' },
+    { path: '/payouts', icon: CreditCard, label: 'Payouts' },
+    { path: '/disputes', icon: AlertCircle, label: 'Disputes' },
+    { path: '/reviews', icon: Star, label: 'Reviews' },
+    { path: '/verification', icon: CheckCircle, label: 'Verification' },
+    { path: '/audit', icon: Shield, label: 'Audit Log' },
+    { path: '/notifications', icon: Bell, label: 'Notifications' },
+    { path: '/announcements', icon: FileText, label: 'Announcements' },
     { path: '/analytics', icon: BarChart3, label: 'Analytics' },
+    { path: '/settings', icon: SettingsIcon, label: 'Settings' },
   ];
 
   const handleLogout = async () => {
@@ -36,12 +49,8 @@ const Sidebar = () => {
   return (
     <div className="bg-gray-900 text-white w-64 flex flex-col">
       <div className="p-6">
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 bg-primary-600 rounded-lg flex items-center justify-center">
-            <Package size={24} />
-          </div>
-          <h2 className="text-xl font-bold">Storage Admin</h2>
-        </div>
+        <LockifyHubLogo size="medium" variant="dark" />
+        <p className="text-xs text-gray-400 mt-2">Admin Portal</p>
       </div>
       
       <nav className="flex-1 px-3">

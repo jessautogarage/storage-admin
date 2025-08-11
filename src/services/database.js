@@ -5,6 +5,7 @@ import {
   getDocs, 
   getDoc,
   addDoc, 
+  setDoc,
   updateDoc, 
   deleteDoc, 
   query, 
@@ -26,6 +27,20 @@ export const databaseService = {
       });
       return { success: true, id: docRef.id };
     } catch (error) {
+      return { success: false, error: error.message };
+    }
+  },
+
+  async createWithId(collectionName, docId, data) {
+    try {
+      await setDoc(doc(db, collectionName, docId), {
+        ...data,
+        createdAt: serverTimestamp(),
+        updatedAt: serverTimestamp()
+      });
+      return { success: true, id: docId };
+    } catch (error) {
+      console.error(`Error creating document with ID ${docId}:`, error);
       return { success: false, error: error.message };
     }
   },
@@ -76,11 +91,29 @@ export const databaseService = {
   },
 
   // Real-time listener
-  subscribe(collectionName, queryConstraints = [], callback) {
-    const q = query(collection(db, collectionName), ...queryConstraints);
-    return onSnapshot(q, (snapshot) => {
-      const data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-      callback(data);
-    });
+  subscribe(collectionName, queryConstraints = [], callback, errorCallback) {
+    try {
+      const q = query(collection(db, collectionName), ...queryConstraints);
+      return onSnapshot(
+        q, 
+        (snapshot) => {
+          const data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+          callback(data);
+        },
+        (error) => {
+          console.error(`Firestore subscription error for ${collectionName}:`, error);
+          if (errorCallback) {
+            errorCallback(error);
+          }
+        }
+      );
+    } catch (error) {
+      console.error(`Failed to create subscription for ${collectionName}:`, error);
+      if (errorCallback) {
+        errorCallback(error);
+      }
+      // Return a dummy unsubscribe function
+      return () => {};
+    }
   }
 };

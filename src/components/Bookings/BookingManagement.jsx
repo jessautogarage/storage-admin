@@ -48,7 +48,7 @@ const BookingManagement = () => {
       .reduce((sum, b) => sum + (b.amount || 0), 0),
     platformFees: bookings
       .filter(b => b.status === 'confirmed' || b.status === 'completed')
-      .reduce((sum, b) => sum + (b.amount || 0) * 0.09, 0)
+      .reduce((sum, b) => sum + (b.amount || 0) * 0.10, 0)
   };
 
   const handleViewDetails = (booking) => {
@@ -226,7 +226,7 @@ const BookingManagement = () => {
                         ${booking.amount || 0}
                       </div>
                       <div className="text-xs text-gray-500">
-                        Fee: ${((booking.amount || 0) * 0.09).toFixed(2)}
+                        Fee: ${((booking.amount || 0) * 0.10).toFixed(2)}
                       </div>
                     </div>
                   </td>
@@ -374,8 +374,8 @@ const BookingManagement = () => {
                     <p className="font-medium text-lg">${selectedBooking.amount || 0}</p>
                   </div>
                   <div>
-                    <p className="text-sm text-gray-600">Platform Fee (9%)</p>
-                    <p className="font-medium">${((selectedBooking.amount || 0) * 0.09).toFixed(2)}</p>
+                    <p className="text-sm text-gray-600">Platform Fee (10%)</p>
+                    <p className="font-medium">${((selectedBooking.amount || 0) * 0.10).toFixed(2)}</p>
                   </div>
                 </div>
               </div>

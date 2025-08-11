@@ -17,11 +17,31 @@ import {
 } from 'lucide-react';
 import { useAnalytics } from '../../hooks/useAnalytics';
 import { format, startOfMonth, endOfMonth, subMonths } from 'date-fns';
+import { 
+  LineChart, 
+  Line, 
+  AreaChart, 
+  Area,
+  BarChart, 
+  Bar,
+  PieChart as RePieChart,
+  Pie,
+  Cell,
+  XAxis, 
+  YAxis, 
+  CartesianGrid, 
+  Tooltip, 
+  Legend,
+  ResponsiveContainer 
+} from 'recharts';
+import { Star } from 'lucide-react';
 import RevenueAnalytics from './RevenueAnalytics';
 import UserAnalytics from './UserAnalytics';
 import ListingAnalytics from './ListingAnalytics';
 import GeographicAnalytics from './GeographicAnalytics';
 import PredictiveAnalytics from './PredictiveAnalytics';
+
+const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884D8'];
 
 const AnalyticsDashboard = () => {
   const [activeTab, setActiveTab] = useState('overview');

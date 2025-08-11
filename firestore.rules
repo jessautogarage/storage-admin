@@ -1,0 +1,135 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Helper functions
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+    
+    function isAdmin() {
+      return request.auth != null && 
+        (request.auth.token.admin == true ||
+         (exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
+          get(/databases/$(database)/documents/users/$(request.auth.uid)).data.userType == 'admin'));
+    }
+    
+    function isHost() {
+      return isAuthenticated() && 
+        exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.userType == 'host';
+    }
+    
+    function isClient() {
+      return isAuthenticated() && 
+        exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.userType == 'client';
+    }
+    
+    function isValidUserData(data) {
+      return data.keys().hasAll(['email', 'name', 'phone', 'userType', 'type', 'createdAt']) &&
+        data.userType in ['client', 'host', 'admin'] &&
+        data.type in ['client', 'host', 'admin'] &&
+        data.email is string &&
+        data.name is string &&
+        data.phone is string;
+    }
+    
+    // Users collection
+    match /users/{userId} {
+      allow read: if isAuthenticated() && 
+        (request.auth.uid == userId || isAdmin());
+      allow create: if isAuthenticated() && 
+        request.auth.uid == userId && 
+        isValidUserData(request.resource.data);
+      allow update: if isAuthenticated() && 
+        (request.auth.uid == userId || isAdmin()) &&
+        isValidUserData(request.resource.data);
+      allow delete: if isAdmin();
+      allow list: if isAdmin();
+    }
+    
+    // Listings collection
+    match /listings/{listingId} {
+      allow read: if isAuthenticated();
+      allow create: if isAuthenticated() && isHost();
+      allow update: if isAuthenticated() && 
+        (resource.data.hostId == request.auth.uid || isAdmin());
+      allow delete: if isAuthenticated() && 
+        (resource.data.hostId == request.auth.uid || isAdmin());
+      allow list: if isAuthenticated();
+    }
+    
+    // Bookings collection
+    match /bookings/{bookingId} {
+      allow read: if isAuthenticated() && 
+        (resource.data.clientId == request.auth.uid || 
+         resource.data.hostId == request.auth.uid ||
+         isAdmin());
+      allow create: if isAuthenticated() && isClient();
+      allow update: if isAuthenticated() && 
+        (resource.data.clientId == request.auth.uid || 
+         resource.data.hostId == request.auth.uid ||
+         isAdmin());
+      allow delete: if isAuthenticated() && 
+        (resource.data.clientId == request.auth.uid || 
+         resource.data.hostId == request.auth.uid ||
+         isAdmin());
+      
+      // Allow queries for authenticated users (needed for dashboard queries)
+      allow list: if isAuthenticated();
+    }
+    
+    // Messages collection
+    match /messages/{messageId} {
+      allow read, write: if isAuthenticated() && 
+        (resource.data.senderId == request.auth.uid || 
+         resource.data.receiverId == request.auth.uid ||
+         isAdmin());
+      allow list: if isAuthenticated();
+    }
+    
+    // Reviews collection
+    match /reviews/{reviewId} {
+      allow read: if isAuthenticated();
+      allow create: if isAuthenticated() && isClient();
+      allow update: if isAuthenticated() && 
+        (resource.data.clientId == request.auth.uid || isAdmin());
+      allow delete: if isAdmin();
+      allow list: if isAuthenticated();
+    }
+    
+    // Payments collection
+    match /payments/{paymentId} {
+      allow read: if isAuthenticated() && 
+        (resource.data.clientId == request.auth.uid || 
+         resource.data.hostId == request.auth.uid ||
+         isAdmin());
+      allow create, update: if isAuthenticated() && 
+        (resource.data.clientId == request.auth.uid || isAdmin());
+      allow delete: if isAdmin();
+      allow list: if isAuthenticated();
+    }
+    
+    // Settings collection - admin access only
+    match /settings/{settingId} {
+      allow read: if isAuthenticated(); // All authenticated users can read settings
+      allow write: if isAdmin(); // Only admins can modify settings
+    }
+    
+    // Settings history collection - admin access only
+    match /settingsHistory/{historyId} {
+      allow read: if isAdmin(); // Only admins can read settings history
+      allow write: if false; // History is only written by server-side code
+    }
+    
+    // Admin collections - full access for admins only
+    match /admin/{document=**} {
+      allow read, write: if isAdmin();
+    }
+    
+    // Catch-all for other collections
+    match /{document=**} {
+      allow read, write: if isAdmin();
+    }
+  }
+}

@@ -13,6 +13,7 @@ import {
 import { useFirestore } from '../../hooks/useFirestore';
 import { payoutService } from '../../services/payoutService';
 import { format, startOfMonth, endOfMonth } from 'date-fns';
+import { where } from 'firebase/firestore';
 
 const PayoutManagement = () => {
   const [selectedHosts, setSelectedHosts] = useState([]);

@@ -1,0 +1,17 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm run dev:*)",
+      "Bash(npm install)",
+      "Bash(rm:*)",
+      "Bash(npm install:*)",
+      "Bash(npm uninstall:*)",
+      "Bash(firebase deploy:*)",
+      "Bash(firebase projects:list:*)",
+      "Bash(grep:*)",
+      "Bash(npm run build:*)",
+      "Bash(echo $VITE_FIREBASE_API_KEY)"
+    ],
+    "deny": []
+  }
+}

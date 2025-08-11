@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
-import { useNavigate, Navigate } from 'react-router-dom';
-import { Lock, Mail, AlertCircle } from 'lucide-react';
+import { useNavigate, Navigate, Link } from 'react-router-dom';
+import { Lock, Mail, AlertCircle, Warehouse, ArrowLeft } from 'lucide-react';
 import { useAuth } from '../../hooks/useAuth';
+import LockifyHubLogo from '../Logo/LockifyHubLogo';
 
 const AdminLogin = () => {
   const [email, setEmail] = useState('');
@@ -12,7 +13,7 @@ const AdminLogin = () => {
   const { user, login } = useAuth();
 
   if (user) {
-    return <Navigate to="/" replace />;
+    return <Navigate to="/dashboard" replace />;
   }
 
   const handleSubmit = async (e) => {
@@ -22,7 +23,7 @@ const AdminLogin = () => {
 
     const result = await login(email, password);
     if (result.success) {
-      navigate('/');
+      navigate('/dashboard');
     } else {
       setError(result.error);
     }
@@ -30,11 +31,23 @@ const AdminLogin = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-100 flex items-center justify-center">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-purple-50 flex items-center justify-center relative">
+      {/* Back to Home Link */}
+      <Link 
+        to="/" 
+        className="absolute top-8 left-8 flex items-center gap-2 text-gray-600 hover:text-blue-600 transition-colors"
+      >
+        <ArrowLeft className="w-5 h-5" />
+        <span>Back to Home</span>
+      </Link>
+
       <div className="max-w-md w-full">
         <div className="text-center mb-8">
+          <div className="flex justify-center mb-4">
+            <LockifyHubLogo size="large" />
+          </div>
           <h1 className="text-3xl font-bold text-gray-900">Admin Dashboard</h1>
-          <p className="mt-2 text-gray-600">Storage Marketplace Management</p>
+          <p className="mt-2 text-gray-600">LockifyHub Management Portal</p>
         </div>
         
         <div className="card p-8">
@@ -83,9 +96,9 @@ const AdminLogin = () => {
             <button
               type="submit"
               disabled={isLoading}
-              className="w-full btn-primary py-3 flex items-center justify-center"
+              className="w-full bg-gradient-to-r from-blue-600 to-blue-500 text-white py-3 rounded-lg font-semibold hover:shadow-lg transform hover:-translate-y-0.5 transition-all duration-200 flex items-center justify-center"
             >
-              {isLoading ? 'Signing in...' : 'Sign In'}
+              {isLoading ? 'Signing in...' : 'Sign In to Admin Portal'}
             </button>
           </form>
         </div>

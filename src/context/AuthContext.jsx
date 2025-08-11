@@ -19,7 +19,12 @@ export const AuthProvider = ({ children }) => {
   const login = async (email, password) => {
     const result = await authService.login(email, password);
     if (result.success) {
-      setUser(result.user);
+      // Set the complete user object with admin status
+      setUser({
+        user: result.user,
+        claims: result.claims,
+        isAdmin: result.isAdmin
+      });
     }
     return result;
   };
