@@ -1,5 +1,5 @@
 // src/services/analyticsService.js
-import { db } from './firebase';
+import { db } from '../utils/firebaseConfig';
 import { 
   collection, 
   query, 

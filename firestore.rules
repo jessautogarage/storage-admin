@@ -8,6 +8,7 @@ service cloud.firestore {
     
     function isAdmin() {
       return request.auth != null && 
+        request.auth.uid != null &&
         (request.auth.token.admin == true ||
          (exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
           get(/databases/$(database)/documents/users/$(request.auth.uid)).data.userType == 'admin'));
@@ -15,23 +16,23 @@ service cloud.firestore {
     
     function isHost() {
       return isAuthenticated() && 
+        request.auth.uid != null &&
         exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
         get(/databases/$(database)/documents/users/$(request.auth.uid)).data.userType == 'host';
     }
     
     function isClient() {
       return isAuthenticated() && 
+        request.auth.uid != null &&
         exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
         get(/databases/$(database)/documents/users/$(request.auth.uid)).data.userType == 'client';
     }
     
     function isValidUserData(data) {
-      return data.keys().hasAll(['email', 'name', 'phone', 'userType', 'type', 'createdAt']) &&
-        data.userType in ['client', 'host', 'admin'] &&
-        data.type in ['client', 'host', 'admin'] &&
-        data.email is string &&
-        data.name is string &&
-        data.phone is string;
+      return data.keys().hasAny(['email']) &&
+        data.get('userType', '') in ['', 'client', 'host', 'admin'] &&
+        data.get('type', '') in ['', 'client', 'host', 'admin'] &&
+        data.get('email', '') is string;
     }
     
     // Users collection
@@ -48,15 +49,15 @@ service cloud.firestore {
       allow list: if isAdmin();
     }
     
-    // Listings collection
+    // Listings collection - SECURE PRODUCTION RULES
     match /listings/{listingId} {
-      allow read: if isAuthenticated();
-      allow create: if isAuthenticated() && isHost();
+      allow read: if true; // Allow public read access to listings for browsing
+      allow create: if isAuthenticated() && (isHost() || isAdmin());
       allow update: if isAuthenticated() && 
         (resource.data.hostId == request.auth.uid || isAdmin());
       allow delete: if isAuthenticated() && 
         (resource.data.hostId == request.auth.uid || isAdmin());
-      allow list: if isAuthenticated();
+      allow list: if true; // Allow public listing for browse functionality
     }
     
     // Bookings collection
@@ -79,6 +80,21 @@ service cloud.firestore {
       allow list: if isAuthenticated();
     }
     
+    // Conversations collection
+    match /conversations/{conversationId} {
+      allow read: if isAuthenticated() && 
+        (resource.data.participants[0] == request.auth.uid || 
+         resource.data.participants[1] == request.auth.uid ||
+         isAdmin());
+      allow create: if isAuthenticated();
+      allow update: if isAuthenticated() && 
+        (resource.data.participants[0] == request.auth.uid || 
+         resource.data.participants[1] == request.auth.uid ||
+         isAdmin());
+      allow delete: if isAdmin();
+      allow list: if isAuthenticated();
+    }
+    
     // Messages collection
     match /messages/{messageId} {
       allow read, write: if isAuthenticated() && 
@@ -98,6 +114,30 @@ service cloud.firestore {
       allow list: if isAuthenticated();
     }
     
+    // Wallets collection - users can manage their own wallets
+    match /wallets/{walletId} {
+      allow read: if isAuthenticated() && 
+        (walletId == request.auth.uid || isAdmin());
+      allow create: if isAuthenticated() && 
+        walletId == request.auth.uid;
+      allow update: if isAuthenticated() && 
+        (walletId == request.auth.uid || isAdmin());
+      allow delete: if isAdmin();
+      allow list: if isAdmin();
+    }
+    
+    // Transactions collection for wallet transactions
+    match /transactions/{transactionId} {
+      allow read: if isAuthenticated() && 
+        (resource.data.clientId == request.auth.uid || 
+         resource.data.hostId == request.auth.uid ||
+         isAdmin());
+      allow create: if isAuthenticated();
+      allow update: if isAdmin();
+      allow delete: if isAdmin();
+      allow list: if isAuthenticated();
+    }
+    
     // Payments collection
     match /payments/{paymentId} {
       allow read: if isAuthenticated() && 
@@ -110,16 +150,31 @@ service cloud.firestore {
       allow list: if isAuthenticated();
     }
     
-    // Settings collection - admin access only
+    // Settings collection - public read, admin write
     match /settings/{settingId} {
-      allow read: if isAuthenticated(); // All authenticated users can read settings
+      allow read: if true; // Allow public read access to settings
       allow write: if isAdmin(); // Only admins can modify settings
+      allow create: if isAdmin(); // Only admins can create settings
     }
     
-    // Settings history collection - admin access only
+    // User Settings collection - users can manage their own settings
+    match /userSettings/{userId} {
+      allow read: if isAuthenticated() && request.auth.uid == userId;
+      allow create: if isAuthenticated() && request.auth.uid == userId;
+      allow update: if isAuthenticated() && request.auth.uid == userId;
+      allow delete: if isAuthenticated() && request.auth.uid == userId;
+    }
+    
+    // Settings history collection - admin access only  
     match /settingsHistory/{historyId} {
-      allow read: if isAdmin(); // Only admins can read settings history
-      allow write: if false; // History is only written by server-side code
+      allow read: if isAdmin(); // Only admins can read history
+      allow write: if isAdmin(); // Only admins can write history
+      allow create: if isAdmin(); // Only admins can create history
+    }
+    
+    // Test collections - restricted access
+    match /test/{document=**} {
+      allow read, write: if isAdmin(); // Only admins can access test collections
     }
     
     // Admin collections - full access for admins only
@@ -127,7 +182,38 @@ service cloud.firestore {
       allow read, write: if isAdmin();
     }
     
-    // Catch-all for other collections
+    // Notifications collection - users can read their own notifications
+    match /notifications/{notificationId} {
+      allow read: if isAuthenticated() && 
+        (resource.data.userId == request.auth.uid || isAdmin());
+      allow create: if isAuthenticated() && 
+        (request.resource.data.userId == request.auth.uid || isAdmin());
+      allow update: if isAuthenticated() && 
+        (resource.data.userId == request.auth.uid || isAdmin());
+      allow delete: if isAuthenticated() && 
+        (resource.data.userId == request.auth.uid || isAdmin());
+      allow list: if isAuthenticated();
+    }
+    
+    // Favorites collection - users can manage their own favorites
+    match /favorites/{favoriteId} {
+      allow read: if isAuthenticated() && 
+        (resource.data.userId == request.auth.uid || isAdmin());
+      allow create: if isAuthenticated() && 
+        request.resource.data.userId == request.auth.uid;
+      allow update: if isAuthenticated() && 
+        (resource.data.userId == request.auth.uid || isAdmin());
+      allow delete: if isAuthenticated() && 
+        (resource.data.userId == request.auth.uid || isAdmin());
+      allow list: if isAuthenticated();
+    }
+    
+    // Analytics collection - admin only
+    match /analytics/{document=**} {
+      allow read, write: if isAdmin();
+    }
+    
+    // Catch-all for other collections - admin only
     match /{document=**} {
       allow read, write: if isAdmin();
     }

@@ -1,127 +1,62 @@
-import React, { useState } from 'react';
-import { MessageSquare, Send, Search, User, Clock, CheckCircle } from 'lucide-react';
-import HostLayout from '../Layout/HostLayout';
+import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../../hooks/useAuth';
+import useHostMessages from '../../hooks/useHostMessages';
+import { MessageSquare, Send, Search, User, Clock, CheckCircle, RefreshCw, AlertTriangle } from 'lucide-react';
+import ModernHeader from '../Layout/ModernHeader';
 
 const Messages = () => {
-  const [selectedConversation, setSelectedConversation] = useState(null);
+  const navigate = useNavigate();
+  const { user, logout } = useAuth();
   const [newMessage, setNewMessage] = useState('');
-  const [searchTerm, setSearchTerm] = useState('');
+  const [sendingMessage, setSendingMessage] = useState(false);
 
-  // Mock conversation data - replace with actual data from Firebase
-  const [conversations] = useState([
-    {
-      id: '1',
-      clientName: 'John Smith',
-      clientEmail: 'john.smith@email.com',
-      listingTitle: 'Spacious Garage Storage',
-      lastMessage: 'What are the access hours for the storage?',
-      lastMessageTime: '2025-01-30T14:30:00Z',
-      unreadCount: 2,
-      status: 'active',
-      messages: [
-        {
-          id: '1',
-          sender: 'client',
-          content: 'Hi! I\'m interested in your garage storage. Is it available?',
-          timestamp: '2025-01-30T10:00:00Z',
-          read: true
-        },
-        {
-          id: '2',
-          sender: 'host',
-          content: 'Hello John! Yes, the garage storage is available. When do you need it?',
-          timestamp: '2025-01-30T10:15:00Z',
-          read: true
-        },
-        {
-          id: '3',
-          sender: 'client',
-          content: 'I need it starting February 1st for about 3 months. What are the access hours for the storage?',
-          timestamp: '2025-01-30T14:30:00Z',
-          read: false
-        }
-      ]
-    },
-    {
-      id: '2',
-      clientName: 'Sarah Johnson',
-      clientEmail: 'sarah.j@email.com',
-      listingTitle: 'Climate Controlled Unit',
-      lastMessage: 'Perfect! I\'ll book it right now.',
-      lastMessageTime: '2025-01-29T16:45:00Z',
-      unreadCount: 0,
-      status: 'completed',
-      messages: [
-        {
-          id: '1',
-          sender: 'client',
-          content: 'Is the climate controlled unit suitable for storing documents and electronics?',
-          timestamp: '2025-01-29T15:00:00Z',
-          read: true
-        },
-        {
-          id: '2',
-          sender: 'host',
-          content: 'Absolutely! It maintains consistent temperature and humidity levels, perfect for sensitive items.',
-          timestamp: '2025-01-29T15:30:00Z',
-          read: true
-        },
-        {
-          id: '3',
-          sender: 'client',
-          content: 'Perfect! I\'ll book it right now.',
-          timestamp: '2025-01-29T16:45:00Z',
-          read: true
-        }
-      ]
-    },
-    {
-      id: '3',
-      clientName: 'Mike Davis',
-      clientEmail: 'mike.davis@email.com',
-      listingTitle: 'Outdoor Storage Shed',
-      lastMessage: 'Thanks for accommodating the early drop-off!',
-      lastMessageTime: '2025-01-28T09:20:00Z',
-      unreadCount: 0,
-      status: 'active',
-      messages: [
-        {
-          id: '1',
-          sender: 'client',
-          content: 'Can I drop off my items early in the morning around 7 AM?',
-          timestamp: '2025-01-28T08:00:00Z',
-          read: true
-        },
-        {
-          id: '2',
-          sender: 'host',
-          content: 'Sure! I can arrange early access for you. Just let me know which day.',
-          timestamp: '2025-01-28T09:00:00Z',
-          read: true
-        },
-        {
-          id: '3',
-          sender: 'client',
-          content: 'Thanks for accommodating the early drop-off!',
-          timestamp: '2025-01-28T09:20:00Z',
-          read: true
-        }
-      ]
+  // Use the host messages hook
+  const {
+    conversations,
+    selectedConversation,
+    loading,
+    error,
+    unreadCount,
+    searchTerm,
+    sendMessage,
+    markAsRead,
+    searchConversations,
+    selectConversation,
+    refresh
+  } = useHostMessages();
+
+  // Auto-mark conversation as read when selected
+  useEffect(() => {
+    if (selectedConversation && selectedConversation.unreadCount > 0) {
+      markAsRead(selectedConversation.id);
     }
-  ]);
+  }, [selectedConversation, markAsRead]);
 
-  const filteredConversations = conversations.filter(conv =>
-    conv.clientName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    conv.listingTitle.toLowerCase().includes(searchTerm.toLowerCase())
-  );
-
-  const handleSendMessage = (e) => {
+  const handleSendMessage = async (e) => {
     e.preventDefault();
-    if (!newMessage.trim() || !selectedConversation) return;
+    if (!newMessage.trim() || !selectedConversation || sendingMessage) return;
 
-    // TODO: Implement message sending
-    console.log('Sending message:', newMessage, 'to conversation:', selectedConversation.id);
-    setNewMessage('');
+    setSendingMessage(true);
+    
+    try {
+      const result = await sendMessage(selectedConversation.id, newMessage);
+      
+      if (result.success) {
+        setNewMessage('');
+      } else {
+        console.error('Failed to send message:', result.error);
+        // You could show a toast notification here
+      }
+    } catch (error) {
+      console.error('Error sending message:', error);
+    } finally {
+      setSendingMessage(false);
+    }
+  };
+
+  const handleRetry = () => {
+    refresh();
   };
 
   const formatMessageTime = (timestamp) => {
@@ -147,18 +82,91 @@ const Messages = () => {
     });
   };
 
+  const handleSignOut = async () => {
+    await logout();
+    navigate('/');
+  };
+
+  // Skeleton loader for conversations
+  const ConversationSkeleton = () => (
+    <div className="space-y-1 p-2">
+      {[1, 2, 3].map((i) => (
+        <div key={i} className="p-4 rounded-lg">
+          <div className="flex items-start justify-between mb-2">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 bg-gray-200 rounded-full animate-pulse"></div>
+              <div className="flex-1 min-w-0">
+                <div className="h-4 bg-gray-200 rounded animate-pulse mb-1"></div>
+                <div className="h-3 bg-gray-200 rounded animate-pulse w-3/4"></div>
+              </div>
+            </div>
+            <div className="h-3 bg-gray-200 rounded animate-pulse w-12"></div>
+          </div>
+          <div className="h-3 bg-gray-200 rounded animate-pulse w-5/6"></div>
+        </div>
+      ))}
+    </div>
+  );
+
+  // Skeleton loader for messages
+  const MessageSkeleton = () => (
+    <div className="space-y-4">
+      {[1, 2, 3, 4].map((i) => (
+        <div key={i} className={`flex ${i % 2 === 0 ? 'justify-end' : 'justify-start'}`}>
+          <div className={`max-w-xs lg:max-w-md px-4 py-2 rounded-lg ${
+            i % 2 === 0 ? 'bg-gray-200' : 'bg-gray-100'
+          } animate-pulse`}>
+            <div className="h-4 bg-gray-300 rounded mb-1"></div>
+            <div className="h-3 bg-gray-300 rounded w-16"></div>
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+
+  // Error display component
+  const ErrorDisplay = ({ error, onRetry }) => (
+    <div className="p-6 text-center">
+      <AlertTriangle className="mx-auto text-red-400 mb-4" size={48} />
+      <h3 className="text-lg font-medium text-gray-900 mb-2">Unable to load messages</h3>
+      <p className="text-gray-600 mb-4">{error}</p>
+      <button
+        onClick={onRetry}
+        className="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+      >
+        <RefreshCw size={16} className="mr-2" />
+        Retry
+      </button>
+    </div>
+  );
+
   return (
-    <HostLayout>
-      <div className="p-6">
+    <div className="min-h-screen bg-gray-50">
+      <ModernHeader 
+        variant="host"
+        user={user}
+        onSignIn={() => navigate('/signin')}
+        onSignUp={() => navigate('/signup')}
+        onLogout={handleSignOut}
+      />
+      
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Header */}
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900">Messages</h1>
+          <div className="flex items-center gap-3">
+            <h1 className="text-3xl font-bold text-gray-900">Messages</h1>
+            {unreadCount > 0 && (
+              <span className="bg-red-500 text-white text-sm font-medium px-2 py-1 rounded-full">
+                {unreadCount} unread
+              </span>
+            )}
+          </div>
           <p className="text-gray-600 mt-1">Communicate with your clients</p>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 h-[calc(100vh-200px)]">
-          {/* Conversations List */}
-          <div className="card flex flex-col">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 h-[calc(100vh-200px)]">
+        {/* Conversations List */}
+        <div className="bg-white rounded-xl shadow-sm border flex flex-col">
             {/* Search */}
             <div className="p-4 border-b border-gray-200">
               <div className="relative">
@@ -168,25 +176,37 @@ const Messages = () => {
                   placeholder="Search conversations..."
                   className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                   value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
+                  onChange={(e) => searchConversations(e.target.value)}
                 />
               </div>
             </div>
 
             {/* Conversations */}
             <div className="flex-1 overflow-y-auto">
-              {filteredConversations.length === 0 ? (
+              {error ? (
+                <ErrorDisplay error={error} onRetry={handleRetry} />
+              ) : loading ? (
+                <ConversationSkeleton />
+              ) : conversations.length === 0 ? (
                 <div className="p-6 text-center">
                   <MessageSquare className="mx-auto text-gray-400 mb-4" size={48} />
                   <h3 className="text-lg font-medium text-gray-900 mb-2">No messages yet</h3>
                   <p className="text-gray-600">Messages from clients will appear here</p>
+                  {searchTerm && (
+                    <button
+                      onClick={() => searchConversations('')}
+                      className="mt-3 text-blue-600 hover:text-blue-700 text-sm"
+                    >
+                      Clear search
+                    </button>
+                  )}
                 </div>
               ) : (
                 <div className="space-y-1 p-2">
-                  {filteredConversations.map((conversation) => (
+                  {conversations.map((conversation) => (
                     <button
                       key={conversation.id}
-                      onClick={() => setSelectedConversation(conversation)}
+                      onClick={() => selectConversation(conversation.id)}
                       className={`w-full text-left p-4 rounded-lg transition-colors ${
                         selectedConversation?.id === conversation.id
                           ? 'bg-blue-50 border border-blue-200'
@@ -222,8 +242,8 @@ const Messages = () => {
             </div>
           </div>
 
-          {/* Chat Area */}
-          <div className="lg:col-span-2 card flex flex-col">
+        {/* Chat Area */}
+        <div className="lg:col-span-2 bg-white rounded-xl shadow-sm border flex flex-col">
             {selectedConversation ? (
               <>
                 {/* Chat Header */}
@@ -250,28 +270,39 @@ const Messages = () => {
 
                 {/* Messages */}
                 <div className="flex-1 overflow-y-auto p-4 space-y-4">
-                  {selectedConversation.messages.map((message) => (
-                    <div
-                      key={message.id}
-                      className={`flex ${message.sender === 'host' ? 'justify-end' : 'justify-start'}`}
-                    >
-                      <div className={`max-w-xs lg:max-w-md px-4 py-2 rounded-lg ${
-                        message.sender === 'host'
-                          ? 'bg-blue-600 text-white'
-                          : 'bg-gray-100 text-gray-900'
-                      }`}>
-                        <p className="text-sm">{message.content}</p>
-                        <div className={`flex items-center justify-end gap-1 mt-1 text-xs ${
-                          message.sender === 'host' ? 'text-blue-200' : 'text-gray-500'
-                        }`}>
-                          <span>{formatTime(message.timestamp)}</span>
-                          {message.sender === 'host' && (
-                            <CheckCircle size={12} className={message.read ? 'text-blue-200' : 'text-blue-300'} />
-                          )}
-                        </div>
+                  {loading ? (
+                    <MessageSkeleton />
+                  ) : selectedConversation?.messages?.length === 0 ? (
+                    <div className="flex items-center justify-center h-full text-center">
+                      <div>
+                        <MessageSquare className="mx-auto text-gray-400 mb-2" size={32} />
+                        <p className="text-gray-600">No messages in this conversation yet</p>
                       </div>
                     </div>
-                  ))}
+                  ) : (
+                    selectedConversation?.messages?.map((message) => (
+                      <div
+                        key={message.id}
+                        className={`flex ${message.sender === 'host' ? 'justify-end' : 'justify-start'}`}
+                      >
+                        <div className={`max-w-xs lg:max-w-md px-4 py-2 rounded-lg ${
+                          message.sender === 'host'
+                            ? 'bg-blue-600 text-white'
+                            : 'bg-gray-100 text-gray-900'
+                        }`}>
+                          <p className="text-sm">{message.content}</p>
+                          <div className={`flex items-center justify-end gap-1 mt-1 text-xs ${
+                            message.sender === 'host' ? 'text-blue-200' : 'text-gray-500'
+                          }`}>
+                            <span>{formatTime(message.timestamp)}</span>
+                            {message.sender === 'host' && (
+                              <CheckCircle size={12} className={message.read ? 'text-blue-200' : 'text-blue-300'} />
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    ))
+                  )}
                 </div>
 
                 {/* Message Input */}
@@ -280,16 +311,21 @@ const Messages = () => {
                     <input
                       type="text"
                       placeholder="Type your message..."
-                      className="flex-1 border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      className="flex-1 border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50"
                       value={newMessage}
                       onChange={(e) => setNewMessage(e.target.value)}
+                      disabled={sendingMessage}
                     />
                     <button
                       type="submit"
-                      disabled={!newMessage.trim()}
+                      disabled={!newMessage.trim() || sendingMessage}
                       className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
                     >
-                      <Send size={20} />
+                      {sendingMessage ? (
+                        <RefreshCw size={20} className="animate-spin" />
+                      ) : (
+                        <Send size={20} />
+                      )}
                     </button>
                   </div>
                 </form>
@@ -306,7 +342,7 @@ const Messages = () => {
           </div>
         </div>
       </div>
-    </HostLayout>
+    </div>
   );
 };
 

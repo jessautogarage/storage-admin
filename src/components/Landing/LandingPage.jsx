@@ -28,6 +28,7 @@ import {
   BarChart3
 } from 'lucide-react';
 import LockifyHubLogo from '../Logo/LockifyHubLogo';
+// Removed ModernNavigation and HeroSearch imports
 
 const LandingPage = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -106,14 +107,14 @@ const LandingPage = () => {
     {
       name: "Maria Santos",
       role: "Renter",
-      content: "Found a garage space in Makati for ₱3,000/month - half the price of commercial storage! The host was very accommodating with my schedule.",
+      content: "Found a garage space in Makati for ₱100/day - much cheaper than commercial storage! The host was very accommodating with my schedule.",
       rating: 5,
       image: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=150&h=150&fit=crop&crop=face"
     },
     {
       name: "Juan dela Cruz",
       role: "Host",
-      content: "I've been earning ₱8,000/month from my unused garage in Quezon City. LockifyHub handles all payments and insurance - very convenient!",
+      content: "I've been earning ₱270/day from my unused garage in Quezon City. LockifyHub handles all payments and insurance - very convenient!",
       rating: 5,
       image: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&h=150&fit=crop&crop=face"
     },
@@ -150,77 +151,11 @@ const LandingPage = () => {
 
   return (
     <div className="min-h-screen bg-white">
-      {/* Header */}
-      <header className={`fixed top-0 w-full z-50 transition-all duration-300 ${
-        scrollY > 50 ? 'bg-white/95 backdrop-blur-lg shadow-lg' : 'bg-white/90 backdrop-blur-sm'
-      }`}>
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center py-4">
-            <LockifyHubLogo size="medium" />
-
-            {/* Desktop Navigation */}
-            <nav className="hidden md:flex items-center space-x-8">
-              <a href="#how-it-works" className="text-gray-700 hover:text-blue-600 transition-colors font-medium">How it Works</a>
-              <a href="#features" className="text-gray-700 hover:text-blue-600 transition-colors font-medium">Features</a>
-              <a href="#pricing" className="text-gray-700 hover:text-blue-600 transition-colors font-medium">Pricing</a>
-              <a href="#testimonials" className="text-gray-700 hover:text-blue-600 transition-colors font-medium">Reviews</a>
-              <button className="text-blue-600 font-medium hover:text-blue-700">List Your Space</button>
-            </nav>
-
-            <div className="hidden md:flex items-center space-x-4">
-              <button 
-                onClick={() => navigate('/signin')}
-                className="text-gray-700 hover:text-blue-600 transition-colors font-medium flex items-center gap-2"
-              >
-                <LogIn className="w-4 h-4" />
-                Sign In
-              </button>
-              <button 
-                onClick={() => navigate('/signup')}
-                className="bg-gradient-to-r from-blue-600 to-blue-500 text-white px-6 py-2 rounded-lg hover:shadow-lg transform hover:-translate-y-0.5 transition-all duration-200"
-              >
-                Get Started
-              </button>
-            </div>
-
-            {/* Mobile Menu Button */}
-            <button 
-              className="md:hidden"
-              onClick={() => setIsMenuOpen(!isMenuOpen)}
-            >
-              {isMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
-            </button>
-          </div>
-        </div>
-
-        {/* Mobile Menu */}
-        {isMenuOpen && (
-          <div className="md:hidden bg-white border-t border-gray-200 shadow-lg">
-            <div className="px-4 py-6 space-y-4">
-              <a href="#how-it-works" className="block text-gray-700 hover:text-blue-600 transition-colors font-medium">How it Works</a>
-              <a href="#features" className="block text-gray-700 hover:text-blue-600 transition-colors font-medium">Features</a>
-              <a href="#pricing" className="block text-gray-700 hover:text-blue-600 transition-colors font-medium">Pricing</a>
-              <a href="#testimonials" className="block text-gray-700 hover:text-blue-600 transition-colors font-medium">Reviews</a>
-              <button className="block w-full text-left text-blue-600 font-medium">List Your Space</button>
-              <div className="pt-4 border-t border-gray-200 space-y-3">
-                <button 
-                  onClick={() => navigate('/signin')}
-                  className="w-full text-gray-700 hover:text-blue-600 transition-colors py-2 flex items-center justify-center gap-2"
-                >
-                  <LogIn className="w-4 h-4" />
-                  Sign In
-                </button>
-                <button 
-                  onClick={() => navigate('/signup')}
-                  className="bg-gradient-to-r from-blue-600 to-blue-500 text-white px-6 py-2 rounded-lg w-full"
-                >
-                  Get Started
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
-      </header>
+      {/* Modern Navigation */}
+      <ModernNavigation 
+        variant="landing"
+        onSignOut={() => console.log('Sign out')}
+      />
 
       {/* Hero Section */}
       <section className="relative pt-20 pb-16 overflow-hidden">
@@ -245,34 +180,32 @@ const LandingPage = () => {
               and affordably with LockifyHub's trusted storage marketplace.
             </p>
 
-            {/* Search Bar */}
-            <div className="max-w-2xl mx-auto mb-8">
-              <div className="bg-white rounded-full shadow-xl p-2 flex items-center">
-                <div className="flex-1 flex items-center px-4">
-                  <MapPin className="w-5 h-5 text-gray-400 mr-3" />
-                  <input
-                    type="text"
-                    placeholder="Enter your zip code or city"
-                    value={searchLocation}
-                    onChange={(e) => setSearchLocation(e.target.value)}
-                    className="flex-1 outline-none text-gray-700 placeholder-gray-400"
-                  />
-                </div>
-                <button className="bg-gradient-to-r from-blue-600 to-blue-500 text-white px-8 py-3 rounded-full font-semibold hover:shadow-lg transition-all duration-200 flex items-center gap-2">
-                  <Search className="w-5 h-5" />
-                  Find Storage
+            {/* Removed Hero Search component */}
+            <div className="bg-white rounded-2xl shadow-lg p-6 border mb-8">
+              <div className="flex flex-col md:flex-row gap-4">
+                <input
+                  type="text"
+                  placeholder="Enter your barangay, city, or area"
+                  className="flex-1 px-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                />
+                <button className="bg-blue-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-blue-700 transition-colors">
+                  Search Storage
                 </button>
               </div>
             </div>
 
-            <div className="flex items-center justify-center space-x-8 text-sm text-blue-200">
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-4 sm:gap-8 text-sm text-primary-100">
               <div className="flex items-center space-x-2">
-                <CheckCircle className="w-4 h-4 text-green-400" />
+                <CheckCircle className="w-4 h-4 text-success-400" />
                 <span>No signup required to browse</span>
               </div>
               <div className="flex items-center space-x-2">
-                <CheckCircle className="w-4 h-4 text-green-400" />
+                <CheckCircle className="w-4 h-4 text-success-400" />
                 <span>Instant booking available</span>
+              </div>
+              <div className="flex items-center space-x-2">
+                <CheckCircle className="w-4 h-4 text-success-400" />
+                <span>Verified hosts only</span>
               </div>
             </div>
           </div>
@@ -289,7 +222,7 @@ const LandingPage = () => {
                 <div className="text-white">
                   <p className="text-sm">Popular Choice</p>
                   <p className="text-lg font-semibold">Garage Spaces</p>
-                  <p className="text-sm opacity-90">From ₱2,500/month</p>
+                  <p className="text-sm opacity-90">From ₱85/day</p>
                 </div>
               </div>
             </div>
@@ -304,7 +237,7 @@ const LandingPage = () => {
                 <div className="text-white">
                   <p className="text-sm">Climate Controlled</p>
                   <p className="text-lg font-semibold">Basement Storage</p>
-                  <p className="text-sm opacity-90">From ₱2,000/month</p>
+                  <p className="text-sm opacity-90">From ₱65/day</p>
                 </div>
               </div>
             </div>
@@ -319,7 +252,7 @@ const LandingPage = () => {
                 <div className="text-white">
                   <p className="text-sm">Budget Friendly</p>
                   <p className="text-lg font-semibold">Attic & More</p>
-                  <p className="text-sm opacity-90">From ₱1,500/month</p>
+                  <p className="text-sm opacity-90">From ₱50/day</p>
                 </div>
               </div>
             </div>
@@ -520,7 +453,7 @@ const LandingPage = () => {
             Turn Your Extra Space Into Extra Income
           </h2>
           <p className="text-xl mb-8 opacity-90">
-            List your unused space and start earning up to ₱25,000/month
+            List your unused space and start earning up to ₱850/day
           </p>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-12">
             <div>

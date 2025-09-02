@@ -1,9 +1,9 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { Mail, Lock, AlertCircle, Warehouse, ArrowLeft, Eye, EyeOff } from 'lucide-react';
 import LockifyHubLogo from '../Logo/LockifyHubLogo';
-import { authService } from '../../services/auth';
-import { databaseService } from '../../services/database';
+import { useAuth } from '../../hooks/useAuth';
+import AuthNavigationHandler from './AuthNavigationHandler';
 
 const UserSignIn = () => {
   const [email, setEmail] = useState('');
@@ -11,48 +11,68 @@ const UserSignIn = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [loginSuccess, setLoginSuccess] = useState(false);
   const navigate = useNavigate();
+  const { user, loading } = useAuth();
+
+  // If user is already logged in, redirect appropriately
+  useEffect(() => {
+    if (user && !loading) {
+      // User is already logged in, let navigation handler take care of routing
+      setLoginSuccess(true);
+    }
+  }, [user, loading]);
+
+  const { login } = useAuth();
+
+  const validateForm = () => {
+    // Email validation
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      setError('Please enter a valid email address');
+      return false;
+    }
+
+    // Password validation
+    if (password.length < 6) {
+      setError('Password must be at least 6 characters long');
+      return false;
+    }
+
+    return true;
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
+
+    if (!validateForm()) {
+      return;
+    }
+
     setIsLoading(true);
 
     try {
-      const result = await authService.login(email, password);
+      const result = await login(email, password);
       
       if (result.success) {
-        // Check if user is admin or regular user
-        if (result.isAdmin) {
-          // Admin user - redirect to admin dashboard
-          navigate('/dashboard');
-        } else {
-          // Regular user - get user data from Firestore
-          const userResult = await databaseService.getById('users', result.user.uid);
-          
-          if (userResult.success) {
-            const userData = userResult.data;
-            
-            // Check user type and redirect accordingly
-            if (userData.type === 'host' || userData.userType === 'host') {
-              navigate('/host-dashboard'); // Create this route if needed
-            } else {
-              navigate('/client-dashboard'); // Create this route if needed
-            }
-          } else {
-            // User not found in Firestore, redirect to onboarding
-            navigate('/onboarding');
-          }
-        }
+        // Set login success flag to trigger navigation
+        setLoginSuccess(true);
       } else {
         setError(result.error || 'Invalid email or password');
       }
     } catch (err) {
+      console.error('Login error:', err);
       setError('Sign in failed. Please try again.');
     } finally {
       setIsLoading(false);
     }
   };
+
+  // Show navigation handler after successful login
+  if (loginSuccess) {
+    return <AuthNavigationHandler />;
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-purple-50 flex items-center justify-center relative">

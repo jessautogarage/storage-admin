@@ -1,7 +1,7 @@
 // src/services/messageService.js
 // ✅ Enhanced message service with booking-specific conversations
 
-import { db } from './firebase';
+import { db } from '../utils/firebaseConfig';
 import { 
   collection, 
   doc, 

@@ -2,7 +2,7 @@ import React, { useMemo } from 'react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { format, subDays, startOfDay } from 'date-fns';
 
-const RevenueChart = ({ bookings }) => {
+const RevenueChart = ({ bookings, payments = [] }) => {
   const chartData = useMemo(() => {
     // Generate last 30 days
     const days = [];
@@ -16,13 +16,22 @@ const RevenueChart = ({ bookings }) => {
       });
     }
 
-    // Aggregate booking data
+    // Aggregate payment data (more accurate for revenue)
+    payments.forEach(payment => {
+      const paymentDate = startOfDay(payment.createdAt?.toDate?.() || new Date(payment.createdAt));
+      const dayIndex = days.findIndex(d => d.fullDate.getTime() === paymentDate.getTime());
+      
+      if (dayIndex !== -1) {
+        days[dayIndex].revenue += payment.amount || 0;
+      }
+    });
+    
+    // Aggregate booking data for count
     bookings.forEach(booking => {
       const bookingDate = startOfDay(booking.createdAt?.toDate?.() || new Date(booking.createdAt));
       const dayIndex = days.findIndex(d => d.fullDate.getTime() === bookingDate.getTime());
       
       if (dayIndex !== -1) {
-        days[dayIndex].revenue += booking.amount || 0;
         days[dayIndex].bookings += 1;
       }
     });
@@ -36,7 +45,7 @@ const RevenueChart = ({ bookings }) => {
         <div className="bg-white p-3 rounded-lg shadow-lg border">
           <p className="text-sm font-medium">{label}</p>
           <p className="text-sm text-primary-600">
-            Revenue: ${payload[0].value.toFixed(2)}
+            Revenue: ₱{payload[0].value.toLocaleString()}
           </p>
           <p className="text-sm text-gray-600">
             Bookings: {payload[0].payload.bookings}
@@ -65,7 +74,7 @@ const RevenueChart = ({ bookings }) => {
           <YAxis 
             tick={{ fontSize: 12 }}
             tickLine={false}
-            tickFormatter={(value) => `$${value}`}
+            tickFormatter={(value) => `₱${value.toLocaleString()}`}
           />
           <Tooltip content={<CustomTooltip />} />
           <Line 

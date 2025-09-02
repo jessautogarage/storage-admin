@@ -1,7 +1,7 @@
 // src/components/Chat/ChatWindow.jsx
 import React, { useState, useRef, useEffect } from 'react';
 import { Send, Paperclip, MoreVertical, User, Phone, Mail, MapPin, AlertCircle } from 'lucide-react';
-import { useRealtimeChat } from '../../hooks/useRealtimeChat';
+import useRealtimeChat from '../../hooks/useRealtimeChat';
 import { format } from 'date-fns';
 
 const ChatWindow = ({ chat }) => {

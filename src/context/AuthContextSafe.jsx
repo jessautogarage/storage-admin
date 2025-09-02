@@ -1,7 +1,7 @@
 import React, { createContext, useState, useEffect } from 'react';
 import { onAuthStateChanged } from 'firebase/auth';
 import { doc, getDoc } from 'firebase/firestore';
-import { auth, db } from '../firebaseConfig';
+import { auth, db } from '../utils/firebaseConfig';
 
 export const AuthContext = createContext();
 
@@ -9,14 +9,17 @@ export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [initializing, setInitializing] = useState(true);
 
   useEffect(() => {
+    let isMounted = true;
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
+      if (!isMounted) return;
+      
       try {
         setError(null);
         
         if (firebaseUser) {
-          console.log('Firebase user detected:', firebaseUser.email);
           
           try {
             // Get user data from Firestore
@@ -24,7 +27,6 @@ export const AuthProvider = ({ children }) => {
             
             if (userDoc.exists()) {
               const userData = userDoc.data();
-              console.log('User data from Firestore:', userData);
               
               // Create complete user object
               const userObj = {
@@ -37,10 +39,8 @@ export const AuthProvider = ({ children }) => {
                 verified: userData.verified || false
               };
               
-              console.log('Setting user object:', userObj);
               setUser(userObj);
             } else {
-              console.log('No Firestore document found for user');
               // User document doesn't exist yet - might be during registration
               setUser({
                 user: firebaseUser,
@@ -67,29 +67,44 @@ export const AuthProvider = ({ children }) => {
             });
           }
         } else {
-          console.log('No Firebase user');
           setUser(null);
         }
       } catch (authError) {
         console.error('Auth state change error:', authError);
-        setError(authError.message);
-        setUser(null);
+        if (isMounted) {
+          setError(authError.message);
+          setUser(null);
+        }
       }
       
-      setLoading(false);
+      if (isMounted) {
+        setLoading(false);
+        setInitializing(false);
+      }
     });
 
     // Cleanup subscription on unmount
-    return unsubscribe;
+    return () => {
+      isMounted = false;
+      unsubscribe();
+    };
   }, []);
 
   const login = async (email, password) => {
     try {
       const { signInWithEmailAndPassword } = await import('firebase/auth');
-      console.log('Attempting login for:', email);
       
       const userCredential = await signInWithEmailAndPassword(auth, email, password);
-      console.log('Login successful, user:', userCredential.user.email);
+      
+      // Update last login timestamp
+      try {
+        const { updateDoc, doc } = await import('firebase/firestore');
+        await updateDoc(doc(db, 'users', userCredential.user.uid), {
+          lastLoginAt: new Date().toISOString()
+        });
+      } catch (updateError) {
+        console.warn('Failed to update last login timestamp:', updateError);
+      }
       
       // The onAuthStateChanged listener will handle updating the user state
       return { success: true, user: userCredential.user };
@@ -102,10 +117,14 @@ export const AuthProvider = ({ children }) => {
           errorMessage = 'No account found with this email address.';
           break;
         case 'auth/wrong-password':
-          errorMessage = 'Incorrect password. Please try again.';
+        case 'auth/invalid-credential':
+          errorMessage = 'Incorrect email or password. Please try again.';
           break;
         case 'auth/invalid-email':
           errorMessage = 'Please enter a valid email address.';
+          break;
+        case 'auth/user-disabled':
+          errorMessage = 'This account has been disabled. Contact support.';
           break;
         case 'auth/too-many-requests':
           errorMessage = 'Too many failed attempts. Please try again later.';
@@ -151,17 +170,42 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-  // Debug info for development
-  console.log('AuthProvider state:', { user: user?.user?.email, isAdmin: user?.isAdmin, loading, error });
+  const resetPassword = async (email) => {
+    try {
+      const { sendPasswordResetEmail } = await import('firebase/auth');
+      await sendPasswordResetEmail(auth, email);
+      return { success: true };
+    } catch (error) {
+      console.error('Password reset error:', error);
+      let errorMessage = 'Failed to send reset email.';
+      
+      switch (error.code) {
+        case 'auth/user-not-found':
+          errorMessage = 'No account found with this email address.';
+          break;
+        case 'auth/invalid-email':
+          errorMessage = 'Please enter a valid email address.';
+          break;
+        case 'auth/too-many-requests':
+          errorMessage = 'Too many requests. Please try again later.';
+          break;
+      }
+      
+      return { success: false, error: errorMessage };
+    }
+  };
+
 
   return (
     <AuthContext.Provider value={{ 
       user, 
       loading, 
       error,
+      initializing,
       login, 
       logout, 
-      refreshUser 
+      refreshUser,
+      resetPassword 
     }}>
       {children}
     </AuthContext.Provider>

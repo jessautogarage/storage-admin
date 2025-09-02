@@ -1,4 +1,4 @@
-import { db } from '../firebaseConfig';
+import { db } from '../utils/firebaseConfig';
 import { 
   doc, 
   getDoc,
@@ -13,6 +13,14 @@ import {
   serverTimestamp,
   writeBatch
 } from 'firebase/firestore';
+import { 
+  isFirebaseReady, 
+  safeGetDoc, 
+  safeSetDoc, 
+  safeUpdateDoc,
+  safeOnSnapshot,
+  getFirebaseErrorMessage 
+} from '../utils/firebaseUtils';
 
 // Default settings structure
 const DEFAULT_SETTINGS = {
@@ -102,21 +110,26 @@ class SettingsService {
    */
   async getSettings() {
     try {
+      // Check if Firebase is ready
+      if (!isFirebaseReady()) {
+        console.warn('Firebase not ready, using default settings');
+        return DEFAULT_SETTINGS;
+      }
+
       const settingsRef = doc(db, 'settings', this.SETTINGS_DOC_ID);
-      const settingsSnap = await getDoc(settingsRef);
+      const currentSettings = await safeGetDoc(settingsRef, null);
       
-      if (settingsSnap.exists()) {
-        const currentSettings = settingsSnap.data();
+      if (currentSettings) {
         // Merge with defaults to ensure all keys exist
         return this._mergeWithDefaults(currentSettings);
       } else {
-        // Initialize with defaults if document doesn't exist
-        await this.initializeDefaultSettings();
+        console.log('Settings document does not exist, using defaults');
         return DEFAULT_SETTINGS;
       }
     } catch (error) {
       console.error('Error getting settings:', error);
-      throw new Error(`Failed to load settings: ${error.message}`);
+      console.warn('Falling back to default settings due to error:', getFirebaseErrorMessage(error));
+      return DEFAULT_SETTINGS;
     }
   }
 
@@ -133,7 +146,15 @@ class SettingsService {
    */
   async updateSettings(updates, category = null, userId = null) {
     try {
+      console.log(`🔧 Updating settings - Category: ${category}, Updates:`, updates, 'User:', userId);
       const settingsRef = doc(db, 'settings', this.SETTINGS_DOC_ID);
+      
+      // Check if settings document exists, if not create it first
+      const settingsSnap = await getDoc(settingsRef);
+      if (!settingsSnap.exists()) {
+        console.log('📝 Settings document does not exist, initializing...');
+        await this.initializeDefaultSettings();
+      }
       
       // If category is specified, update only that category
       if (category) {
@@ -143,6 +164,8 @@ class SettingsService {
           ...updates
         };
         
+        console.log(`📊 Updating ${category} category with:`, updatedCategorySettings);
+        
         const updateData = {
           [category]: updatedCategorySettings,
           updatedAt: serverTimestamp(),
@@ -150,6 +173,7 @@ class SettingsService {
         };
         
         await updateDoc(settingsRef, updateData);
+        console.log(`✅ Successfully updated ${category} settings in Firebase`);
         
         // Log the change
         await this._logSettingsChange(category, updates, userId);
@@ -163,7 +187,9 @@ class SettingsService {
           lastUpdatedBy: userId || 'system'
         };
         
+        console.log('📊 Updating multiple categories:', updateData);
         await updateDoc(settingsRef, updateData);
+        console.log('✅ Successfully updated multiple settings in Firebase');
         
         // Log the change
         await this._logSettingsChange('multiple', updates, userId);
@@ -171,7 +197,7 @@ class SettingsService {
         return { success: true, updates };
       }
     } catch (error) {
-      console.error('Error updating settings:', error);
+      console.error('❌ Error updating settings:', error);
       throw new Error(`Failed to update settings: ${error.message}`);
     }
   }
@@ -207,33 +233,46 @@ class SettingsService {
    */
   subscribeToSettings(callback, errorCallback) {
     try {
+      // Check Firebase connection first
+      if (!isFirebaseReady()) {
+        console.warn('Firebase not ready, using default settings');
+        callback(DEFAULT_SETTINGS);
+        return () => {};
+      }
+
       const settingsRef = doc(db, 'settings', this.SETTINGS_DOC_ID);
       
-      const unsubscribe = onSnapshot(
+      const unsubscribe = safeOnSnapshot(
         settingsRef,
         (doc) => {
-          if (doc.exists()) {
+          if (doc?.exists?.()) {
             const settings = this._mergeWithDefaults(doc.data());
             callback(settings);
+          } else if (doc && typeof doc === 'object') {
+            // If doc is already the data (fallback case)
+            const settings = this._mergeWithDefaults(doc);
+            callback(settings);
           } else {
-            // Initialize if document doesn't exist
-            this.initializeDefaultSettings().then(() => {
-              callback(DEFAULT_SETTINGS);
-            });
+            console.log('Settings document does not exist, using defaults');
+            callback(DEFAULT_SETTINGS);
           }
         },
         (error) => {
           console.error('Settings subscription error:', error);
+          console.warn('Continuing with default settings due to subscription error');
           if (errorCallback) {
             errorCallback(error);
           }
-        }
+        },
+        DEFAULT_SETTINGS // Fallback data
       );
       
       this.listeners.add(unsubscribe);
       return unsubscribe;
     } catch (error) {
       console.error('Failed to subscribe to settings:', error);
+      console.warn('Using default settings due to subscription failure');
+      callback(DEFAULT_SETTINGS);
       if (errorCallback) {
         errorCallback(error);
       }

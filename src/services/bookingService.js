@@ -1,7 +1,7 @@
 // src/services/bookingService.js
 // ✅ Enhanced booking service with booking-specific conversations
 
-import { db } from './firebase';
+import { db } from '../utils/firebaseConfig';
 import { 
   collection, 
   doc, 
@@ -24,7 +24,7 @@ export class BookingService {
   }
 
   /**
-   * Create a new booking with proper price calculation
+   * Create a new booking with proper price calculation and availability check
    * @param {Object} bookingData - Booking information
    * @returns {Promise<Object>} Booking result
    */
@@ -47,61 +47,108 @@ export class BookingService {
         listingAddress
       } = bookingData;
 
-      // ✅ Calculate price breakdown using the corrected service
-      const numberOfDays = Math.ceil((new Date(endDate) - new Date(startDate)) / (1000 * 60 * 60 * 24)) + 1;
-      const priceBreakdown = priceBreakdownService.calculatePriceBreakdown(listingPrice, numberOfDays);
+      // ✅ NEW: Use transaction to prevent double booking
+      return await runTransaction(db, async (transaction) => {
+        // 1. First check availability within the transaction
+        const listingRef = doc(db, 'listings', listingId);
+        const listingDoc = await transaction.get(listingRef);
+        
+        if (!listingDoc.exists()) {
+          throw new Error('Listing not found');
+        }
+        
+        const listingData = listingDoc.data();
+        const availability = listingData.availability || {};
+        const availableDates = availability.availableDates || [];
+        const bookedDates = listingData.bookedDates || [];
+        const blackoutDates = availability.blackoutDates || [];
+        
+        // Generate date range for this booking
+        const bookingDates = this.getDateRange(startDate, endDate);
+        
+        // Check if ANY of the requested dates are unavailable
+        const conflicts = [];
+        bookingDates.forEach(dateStr => {
+          if (bookedDates.includes(dateStr)) {
+            conflicts.push(`${dateStr} is already booked`);
+          } else if (blackoutDates.includes(dateStr)) {
+            conflicts.push(`${dateStr} is a blackout date`);
+          } else if (availability.isEnabled && !availableDates.includes(dateStr)) {
+            conflicts.push(`${dateStr} is not available`);
+          }
+        });
+        
+        if (conflicts.length > 0) {
+          throw new Error(`Booking failed: ${conflicts.join(', ')}`);
+        }
+        
+        // ✅ Calculate price breakdown using the corrected service
+        const numberOfDays = Math.ceil((new Date(endDate) - new Date(startDate)) / (1000 * 60 * 60 * 24)) + 1;
+        const priceBreakdown = priceBreakdownService.calculatePriceBreakdown(listingPrice, numberOfDays);
 
-      // Create booking document
-      const booking = {
-        listingId,
-        clientId,
-        hostId,
-        startDate: new Date(startDate),
-        endDate: new Date(endDate),
-        
-        // ✅ FIXED: Use corrected price calculation
-        totalAmount: priceBreakdown.totalAmount,
-        storageFee: priceBreakdown.storageFee,
-        platformFee: priceBreakdown.platformFee,
-        
-        paymentMethod,
-        deliveryInstructions,
-        status: 'pending',
-        
-        // Denormalized fields for easy access
-        clientName,
-        clientEmail,
-        hostName,
-        hostEmail,
-        listingTitle,
-        listingAddress,
-        
-        createdAt: serverTimestamp(),
-        updatedAt: serverTimestamp()
-      };
+        // 2. Create booking document
+        const booking = {
+          listingId,
+          clientId,
+          hostId,
+          startDate: new Date(startDate),
+          endDate: new Date(endDate),
+          
+          // ✅ FIXED: Use corrected price calculation
+          totalAmount: priceBreakdown.totalAmount,
+          storageFee: priceBreakdown.storageFee,
+          platformFee: priceBreakdown.platformFee,
+          
+          paymentMethod,
+          deliveryInstructions,
+          status: 'pending',
+          
+          // Denormalized fields for easy access
+          clientName,
+          clientEmail,
+          hostName,
+          hostEmail,
+          listingTitle,
+          listingAddress,
+          
+          createdAt: serverTimestamp(),
+          updatedAt: serverTimestamp()
+        };
 
-      // Create the booking
-      const docRef = await addDoc(collection(db, this.collectionName), booking);
-      const bookingId = docRef.id;
-
-      // ✅ Send booking confirmation message using booking-specific conversation
-      await messageService.sendBookingUpdate({
-        bookingId,
-        receiverId: hostId,
-        status: 'pending',
-        listingTitle,
-        customMessage: `New booking request for "${listingTitle}". Please review and confirm.`
+        // 3. Create the booking and update listing in same transaction
+        const bookingRef = doc(collection(db, this.collectionName));
+        transaction.set(bookingRef, booking);
+        
+        // 4. Update listing's booked dates in the same transaction
+        const updatedBookedDates = [...new Set([...bookedDates, ...bookingDates])];
+        transaction.update(listingRef, {
+          bookedDates: updatedBookedDates.sort(),
+          updatedAt: serverTimestamp()
+        });
+        
+        // Return booking ID (messages will be sent after transaction completes)
+        return bookingRef.id;
+      }).then(async (bookingId) => {
+        // Send booking notification AFTER transaction succeeds
+        await messageService.sendBookingUpdate({
+          bookingId,
+          receiverId: hostId,
+          status: 'pending',
+          listingTitle,
+          customMessage: `New booking request for "${listingTitle}". Please review and confirm.`
+        });
+        
+        // ✅ Calculate price breakdown for return
+        const numberOfDays = Math.ceil((new Date(endDate) - new Date(startDate)) / (1000 * 60 * 60 * 24)) + 1;
+        const priceBreakdown = priceBreakdownService.calculatePriceBreakdown(listingPrice, numberOfDays);
+        
+        return {
+          success: true,
+          bookingId,
+          totalAmount: priceBreakdown.totalAmount,
+          priceBreakdown
+        };
       });
-
-      // Update listing availability (remove booked dates)
-      await this.updateListingAvailability(listingId, startDate, endDate);
-
-      return {
-        success: true,
-        bookingId,
-        totalAmount: priceBreakdown.totalAmount,
-        priceBreakdown
-      };
     } catch (error) {
       console.error('Error creating booking:', error);
       return {
@@ -232,8 +279,8 @@ export class BookingService {
         updatedAt: serverTimestamp()
       });
 
-      // Restore listing availability
-      await this.restoreListingAvailability(booking.listingId, booking.startDate, booking.endDate);
+      // Remove booking dates from listing
+      await this.updateListingBookedDates(booking.listingId, booking.startDate, booking.endDate, 'remove');
 
       // ✅ Send cancellation message using booking-specific conversation
       const receiverId = booking.clientId; // Assume host is cancelling, send to client
@@ -256,12 +303,13 @@ export class BookingService {
   }
 
   /**
-   * Update listing availability after booking
+   * Update listing booked dates
    * @param {string} listingId - Listing ID
    * @param {Date} startDate - Booking start date
    * @param {Date} endDate - Booking end date
+   * @param {string} action - 'add' or 'remove'
    */
-  async updateListingAvailability(listingId, startDate, endDate) {
+  async updateListingBookedDates(listingId, startDate, endDate, action = 'add') {
     try {
       return await runTransaction(db, async (transaction) => {
         const listingRef = doc(db, 'listings', listingId);
@@ -272,65 +320,35 @@ export class BookingService {
         }
 
         const listingData = listingDoc.data();
-        const availableDates = listingData.availableDates || [];
+        const currentBookedDates = listingData.bookedDates || [];
 
-        // Remove booked dates from available dates
-        const bookedDates = this.getDateRange(startDate, endDate);
-        const updatedAvailableDates = availableDates.filter(dateStr => 
-          !bookedDates.includes(dateStr)
-        );
-
-        // ✅ Auto-disable listing if no dates remaining
-        const shouldDisable = updatedAvailableDates.length === 0;
-
-        transaction.update(listingRef, {
-          availableDates: updatedAvailableDates,
-          isAvailable: !shouldDisable,
-          ...(shouldDisable && { 
-            status: 'fully_booked',
-            updatedAt: serverTimestamp()
-          })
-        });
-      });
-    } catch (error) {
-      console.error('Error updating listing availability:', error);
-    }
-  }
-
-  /**
-   * Restore listing availability after cancellation
-   * @param {string} listingId - Listing ID
-   * @param {Date} startDate - Booking start date
-   * @param {Date} endDate - Booking end date
-   */
-  async restoreListingAvailability(listingId, startDate, endDate) {
-    try {
-      return await runTransaction(db, async (transaction) => {
-        const listingRef = doc(db, 'listings', listingId);
-        const listingDoc = await transaction.get(listingRef);
-
-        if (!listingDoc.exists()) {
-          throw new Error('Listing not found');
+        // Generate date range for the booking
+        const bookingDates = this.getDateRange(startDate, endDate);
+        
+        let updatedBookedDates;
+        if (action === 'add') {
+          // Add new booked dates
+          updatedBookedDates = [...new Set([...currentBookedDates, ...bookingDates])];
+        } else {
+          // Remove cancelled booking dates
+          updatedBookedDates = currentBookedDates.filter(dateStr => 
+            !bookingDates.includes(dateStr)
+          );
         }
 
-        const listingData = listingDoc.data();
-        const availableDates = listingData.availableDates || [];
-
-        // Add cancelled dates back to available dates
-        const restoredDates = this.getDateRange(startDate, endDate);
-        const updatedAvailableDates = [...new Set([...availableDates, ...restoredDates])].sort();
+        // Sort the dates
+        updatedBookedDates.sort();
 
         transaction.update(listingRef, {
-          availableDates: updatedAvailableDates,
-          isAvailable: true,
-          status: 'active',
+          bookedDates: updatedBookedDates,
           updatedAt: serverTimestamp()
         });
       });
     } catch (error) {
-      console.error('Error restoring listing availability:', error);
+      console.error('Error updating listing booked dates:', error);
     }
   }
+
 
   /**
    * Get date range as array of date strings

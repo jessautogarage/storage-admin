@@ -1,8 +1,12 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../../hooks/useAuth';
 import { Shield, Bell, CreditCard, Key, Globe, Trash2, Download, Upload } from 'lucide-react';
-import HostLayout from '../Layout/HostLayout';
+import ModernHeader from '../Layout/ModernHeader';
 
 const Settings = () => {
+  const navigate = useNavigate();
+  const { user, logout } = useAuth();
   const [activeTab, setActiveTab] = useState('security');
 
   const tabs = [
@@ -324,9 +328,22 @@ const Settings = () => {
     }
   };
 
+  const handleSignOut = async () => {
+    await logout();
+    navigate('/');
+  };
+
   return (
-    <HostLayout>
-      <div className="p-6">
+    <div className="min-h-screen bg-gray-50">
+      <ModernHeader 
+        variant="host"
+        user={user}
+        onSignIn={() => navigate('/signin')}
+        onSignUp={() => navigate('/signup')}
+        onLogout={handleSignOut}
+      />
+      
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="max-w-6xl mx-auto">
           {/* Header */}
           <div className="mb-8">
@@ -365,7 +382,7 @@ const Settings = () => {
           </div>
         </div>
       </div>
-    </HostLayout>
+    </div>
   );
 };
 

@@ -1,10 +1,11 @@
 import React, { useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { Mail, Lock, User, AlertCircle, Warehouse, ArrowLeft, Eye, EyeOff, Phone } from 'lucide-react';
 import LockifyHubLogo from '../Logo/LockifyHubLogo';
-import { auth } from '../../services/firebase';
+import { auth } from '../../utils/firebaseConfig';
 import { createUserWithEmailAndPassword } from 'firebase/auth';
 import { databaseService } from '../../services/database';
+import AuthNavigationHandler from './AuthNavigationHandler';
 
 const UserSignUp = () => {
   const [formData, setFormData] = useState({
@@ -21,7 +22,7 @@ const UserSignUp = () => {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const navigate = useNavigate();
+  const [signupSuccess, setSignupSuccess] = useState(false);
 
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
@@ -31,23 +32,59 @@ const UserSignUp = () => {
     }));
   };
 
+  const validateForm = () => {
+    // Email validation
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(formData.email)) {
+      setError('Please enter a valid email address');
+      return false;
+    }
+
+    // Name validation
+    if (formData.firstName.trim().length < 2) {
+      setError('First name must be at least 2 characters long');
+      return false;
+    }
+    if (formData.lastName.trim().length < 2) {
+      setError('Last name must be at least 2 characters long');
+      return false;
+    }
+
+    // Phone validation (basic)
+    const phoneRegex = /^[\+]?[(]?[\d\s\-\(\)]{10,}$/;
+    if (!phoneRegex.test(formData.phone)) {
+      setError('Please enter a valid phone number');
+      return false;
+    }
+
+    // Password validation
+    if (formData.password.length < 8) {
+      setError('Password must be at least 8 characters long');
+      return false;
+    }
+    if (!/(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/.test(formData.password)) {
+      setError('Password must contain at least one uppercase letter, one lowercase letter, and one number');
+      return false;
+    }
+    if (formData.password !== formData.confirmPassword) {
+      setError('Passwords do not match');
+      return false;
+    }
+
+    // Terms validation
+    if (!formData.agreeToTerms) {
+      setError('Please agree to the terms and conditions');
+      return false;
+    }
+
+    return true;
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
 
-    // Validation
-    if (formData.password !== formData.confirmPassword) {
-      setError('Passwords do not match');
-      return;
-    }
-
-    if (formData.password.length < 8) {
-      setError('Password must be at least 8 characters long');
-      return;
-    }
-
-    if (!formData.agreeToTerms) {
-      setError('Please agree to the terms and conditions');
+    if (!validateForm()) {
       return;
     }
 
@@ -67,22 +104,22 @@ const UserSignUp = () => {
         phone: formData.phone,
         userType: formData.userType,
         type: formData.userType, // Duplicate for admin compatibility
-        status: 'pending', // Default status
+        status: 'active', // Changed from 'pending' to 'active' for immediate access
         profileImageUrl: null,
         rating: 0,
-        totalRatings: 0
+        totalRatings: 0,
+        verified: false,
+        isAdmin: false,
+        createdAt: new Date().toISOString(),
+        lastLoginAt: new Date().toISOString()
       };
       
       // Create user document with the user's UID as the document ID
       const result = await databaseService.createWithId('users', user.uid, userData);
       
       if (result.success) {
-        // Navigate based on user type
-        if (formData.userType === 'host') {
-          navigate('/host-dashboard');
-        } else {
-          navigate('/client-dashboard');
-        }
+        // Set signup success to trigger navigation
+        setSignupSuccess(true);
       } else {
         throw new Error(result.error);
       }
@@ -92,6 +129,11 @@ const UserSignUp = () => {
       setIsLoading(false);
     }
   };
+
+  // Show navigation handler after successful signup
+  if (signupSuccess) {
+    return <AuthNavigationHandler />;
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-purple-50 flex items-center justify-center relative py-12">

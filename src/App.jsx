@@ -1,10 +1,11 @@
 // App.jsx with enhancements
 import React from 'react';
-import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContextSafe';
 import { SettingsProvider } from './context/SettingsContext';
+import { ToastProvider } from './components/Notifications/EnhancedToast';
 import ProtectedRoute from './components/Auth/ProtectedRoute';
-import ProtectedRouteDebug from './components/Auth/ProtectedRouteDebug';
+import RoleProtectedRoute from './components/Auth/RoleProtectedRoute';
 import AdminLogin from './components/Auth/AdminLogin';
 import Layout from './components/Layout/Layout';
 import Dashboard from './components/Dashboard/Dashboard';
@@ -16,91 +17,204 @@ import Announcements from './components/Announcements/Announcements';
 import Settings from './components/Settings/Settings';
 import PaymentManagement from './components/Payments/PaymentManagement';
 import AnalyticsDashboard from './components/Analytics/AnalyticsDashboard';
-import LandingPage from './components/Landing/LandingPage';
+import ModernLandingPage from './components/Landing/ModernLandingPage';
 import UserSignIn from './components/Auth/UserSignIn';
 import UserSignUp from './components/Auth/UserSignUp';
-import HostDashboard from './components/Dashboard/HostDashboard';
-import ClientDashboard from './components/Dashboard/ClientDashboard';
+import ForgotPassword from './components/Auth/ForgotPassword';
+import AuthFlowTest from './components/Test/AuthFlowTest';
+import BookingSignatureTest from './components/Test/BookingSignatureTest';
+import ModernHostDashboard from './components/Host/ModernHostDashboard';
+import ModernClientDashboard from './components/Client/ModernClientDashboard';
 import AuditLog from './components/Audit/AuditLog';
 import DisputeCenter from './components/Disputes/DisputeCenter';
 import NotificationCenter from './components/Notifications/NotificationCenter';
 import PayoutManagement from './components/Payments/PayoutManagement';
 import ReviewManagement from './components/Reviews/ReviewManagement';
 import VerificationCenter from './components/Verification/VerificationCenter';
-import AddListing from './components/Host/AddListing';
+import AddListing from './components/Host/AddListingFixed';
+import EditListing from './components/Host/EditListing';
+import ManageAvailability from './components/Host/ManageAvailability';
 import Listings from './components/Host/Listings';
 import Bookings from './components/Host/Bookings';
 import Analytics from './components/Host/Analytics';
 import Messages from './components/Host/Messages';
 import Profile from './components/Host/Profile';
 import HostSettings from './components/Host/Settings';
-import Browse from './components/Client/Browse';
-import MapView from './components/Client/MapView';
-import ClientBookings from './components/Client/Bookings';
-import Favorites from './components/Client/Favorites';
-import Payments from './components/Client/Payments';
-import Reviews from './components/Client/Reviews';
-import ClientMessages from './components/Client/Messages';
-import ClientProfile from './components/Client/Profile';
-import ClientSettings from './components/Client/Settings';
-import AdminSetup from './components/Setup/AdminSetup';
-import AdminSetupFixed from './components/Setup/AdminSetupFixed';
-import SimpleAdminSetup from './components/Setup/SimpleAdminSetup';
-import DebugAuth from './components/Debug/DebugAuth';
-import TestPage from './components/Test/TestPage';
-import SettingsConnectionTest from './components/Test/SettingsConnectionTest';
+import Wallet from './components/Host/Wallet';
+import ModernBrowse from './components/Client/ModernBrowse';
+import ModernMapView from './components/Client/ModernMapView';
+import ModernBookings from './components/Client/ModernBookings';
+import ModernFavorites from './components/Client/ModernFavorites';
+import ModernPayments from './components/Client/ModernPayments';
+import ModernReviews from './components/Client/ModernReviews';
+import ModernMessages from './components/Client/ModernMessages';
+import ModernProfile from './components/Client/ModernProfile';
+import ModernSettings from './components/Client/ModernSettings';
+import ListingDetail from './components/Client/ListingDetail';
+import ListingDataDebug from './components/Debug/ListingDataDebug';
+import InteractiveTutorial from './components/Tutorial/InteractiveTutorial';
 
 function App() {
   return (
     <AuthProvider>
       <SettingsProvider>
-        <Router future={{
-          v7_startTransition: true,
-          v7_relativeSplatPath: true
-        }}>
+        <ToastProvider>
+          <Router future={{
+            v7_startTransition: true,
+            v7_relativeSplatPath: true
+          }}>
         <Routes>
-          <Route path="/" element={<LandingPage />} />
+          <Route path="/" element={<ModernLandingPage />} />
           <Route path="/signin" element={<UserSignIn />} />
           <Route path="/signup" element={<UserSignUp />} />
+          <Route path="/forgot-password" element={<ForgotPassword />} />
+          <Route path="/test-auth" element={<AuthFlowTest />} />
+          <Route path="/test-signature" element={<BookingSignatureTest />} />
           <Route path="/admin" element={<AdminLogin />} />
-          <Route path="/admin-setup" element={<AdminSetupFixed />} />
-          <Route path="/admin-setup-old" element={<AdminSetup />} />
-          <Route path="/simple-setup" element={<SimpleAdminSetup />} />
-          <Route path="/debug" element={<DebugAuth />} />
-          <Route path="/test" element={<TestPage />} />
-          <Route path="/test-settings" element={<SettingsConnectionTest />} />
-          <Route path="/admin-dashboard-bypass" element={<TestPage />} />
-          <Route path="/client-dashboard" element={<ClientDashboard />} />
-          <Route path="/host-dashboard" element={<HostDashboard />} />
-          <Route path="/onboarding" element={<div className="p-8 text-center"><h1 className="text-2xl font-bold">Welcome to LockifyHub!</h1><p>Complete your profile setup.</p></div>} />
+          <Route path="/client-dashboard" element={
+            <RoleProtectedRoute allowedUserTypes={['client']}>
+              <ModernClientDashboard />
+            </RoleProtectedRoute>
+          } />
+          <Route path="/host/dashboard" element={
+            <RoleProtectedRoute allowedUserTypes={['host']}>
+              <ModernHostDashboard />
+            </RoleProtectedRoute>
+          } />
+          <Route path="/host-dashboard" element={
+            <RoleProtectedRoute allowedUserTypes={['host']}>
+              <ModernHostDashboard />
+            </RoleProtectedRoute>
+          } />
+          <Route path="/onboarding" element={
+            <RoleProtectedRoute allowedUserTypes={['host']}>
+              <InteractiveTutorial />
+            </RoleProtectedRoute>
+          } />
+          <Route path="/tutorial" element={
+            <RoleProtectedRoute allowedUserTypes={['host', 'client']}>
+              <InteractiveTutorial />
+            </RoleProtectedRoute>
+          } />
           
           {/* Host Routes */}
-          <Route path="/host/listings/new" element={<AddListing />} />
-          <Route path="/host/listings" element={<Listings />} />
-          <Route path="/host/bookings" element={<Bookings />} />
-          <Route path="/host/analytics" element={<Analytics />} />
-          <Route path="/host/messages" element={<Messages />} />
-          <Route path="/host/profile" element={<Profile />} />
-          <Route path="/host/settings" element={<HostSettings />} />
+          <Route path="/host/listings/new" element={
+            <RoleProtectedRoute allowedUserTypes={['host']}>
+              <AddListing />
+            </RoleProtectedRoute>
+          } />
+          <Route path="/host/listings/:listingId/edit" element={
+            <RoleProtectedRoute allowedUserTypes={['host']}>
+              <EditListing />
+            </RoleProtectedRoute>
+          } />
+          <Route path="/host/listings/:listingId/availability" element={
+            <RoleProtectedRoute allowedUserTypes={['host']}>
+              <ManageAvailability />
+            </RoleProtectedRoute>
+          } />
+          <Route path="/host/listings" element={
+            <RoleProtectedRoute allowedUserTypes={['host']}>
+              <Listings />
+            </RoleProtectedRoute>
+          } />
+          <Route path="/host/bookings" element={
+            <RoleProtectedRoute allowedUserTypes={['host']}>
+              <Bookings />
+            </RoleProtectedRoute>
+          } />
+          <Route path="/host/analytics" element={
+            <RoleProtectedRoute allowedUserTypes={['host']}>
+              <Analytics />
+            </RoleProtectedRoute>
+          } />
+          <Route path="/host/messages" element={
+            <RoleProtectedRoute allowedUserTypes={['host']}>
+              <Messages />
+            </RoleProtectedRoute>
+          } />
+          <Route path="/host/profile" element={
+            <RoleProtectedRoute allowedUserTypes={['host']}>
+              <Profile />
+            </RoleProtectedRoute>
+          } />
+          <Route path="/host/settings" element={
+            <RoleProtectedRoute allowedUserTypes={['host']}>
+              <HostSettings />
+            </RoleProtectedRoute>
+          } />
+          <Route path="/host/wallet" element={
+            <RoleProtectedRoute allowedUserTypes={['host']}>
+              <Wallet />
+            </RoleProtectedRoute>
+          } />
 
-          {/* Client Routes */}
-          <Route path="/client/browse" element={<Browse />} />
-          <Route path="/client/map" element={<MapView />} />
-          <Route path="/client/bookings" element={<ClientBookings />} />
-          <Route path="/client/favorites" element={<Favorites />} />
-          <Route path="/client/payments" element={<Payments />} />
-          <Route path="/client/reviews" element={<Reviews />} />
-          <Route path="/client/messages" element={<ClientMessages />} />
-          <Route path="/client/profile" element={<ClientProfile />} />
-          <Route path="/client/settings" element={<ClientSettings />} />
+          {/* Client Routes - Modern Design */}
+          <Route path="/client/browse" element={
+            <RoleProtectedRoute allowedUserTypes={['client']}>
+              <ModernBrowse />
+            </RoleProtectedRoute>
+          } />
+          <Route path="/client/map" element={
+            <RoleProtectedRoute allowedUserTypes={['client']}>
+              <ModernMapView />
+            </RoleProtectedRoute>
+          } />
+          <Route path="/client/bookings" element={
+            <RoleProtectedRoute allowedUserTypes={['client']}>
+              <ModernBookings />
+            </RoleProtectedRoute>
+          } />
+          <Route path="/client/favorites" element={
+            <RoleProtectedRoute allowedUserTypes={['client']}>
+              <ModernFavorites />
+            </RoleProtectedRoute>
+          } />
+          <Route path="/client/payments" element={
+            <RoleProtectedRoute allowedUserTypes={['client']}>
+              <ModernPayments />
+            </RoleProtectedRoute>
+          } />
+          <Route path="/client/reviews" element={
+            <RoleProtectedRoute allowedUserTypes={['client']}>
+              <ModernReviews />
+            </RoleProtectedRoute>
+          } />
+          <Route path="/client/messages" element={
+            <RoleProtectedRoute allowedUserTypes={['client']}>
+              <ModernMessages />
+            </RoleProtectedRoute>
+          } />
+          
+          <Route path="/client/profile" element={
+            <RoleProtectedRoute allowedUserTypes={['client']}>
+              <ModernProfile />
+            </RoleProtectedRoute>
+          } />
+          <Route path="/client/settings" element={
+            <RoleProtectedRoute allowedUserTypes={['client']}>
+              <ModernSettings />
+            </RoleProtectedRoute>
+          } />
+          <Route path="/client/listing/:listingId" element={
+            <RoleProtectedRoute allowedUserTypes={['client']}>
+              <ListingDetail />
+            </RoleProtectedRoute>
+          } />
+          <Route path="/debug/listings" element={
+            <RoleProtectedRoute allowedUserTypes={['host']}>
+              <ListingDataDebug />
+            </RoleProtectedRoute>
+          } />
+          
           <Route
             path="/dashboard"
             element={
-              <ProtectedRouteDebug>
+              <ProtectedRoute allowedRoles={['admin']}>
                 <Layout>
                   <Dashboard />
                 </Layout>
-              </ProtectedRouteDebug>
+              </ProtectedRoute>
             }
           />
           <Route
@@ -255,8 +369,9 @@ function App() {
               </div>
             </div>
           } />
-        </Routes>
-      </Router>
+          </Routes>
+          </Router>
+        </ToastProvider>
       </SettingsProvider>
     </AuthProvider>
   );

@@ -1,0 +1,42 @@
+{
+  "title": "Test Storage Space in Makati",
+  "description": "A spacious storage unit perfect for household items and business inventory.",
+  "type": "storage",
+  "status": "available",
+  "pricing": {
+    "monthly": 2500,
+    "daily": 100,
+    "weekly": 600
+  },
+  "location": {
+    "city": "Makati",
+    "district": "Poblacion",
+    "address": "123 Test Street, Makati City",
+    "coordinates": {
+      "latitude": 14.5547,
+      "longitude": 121.0244
+    }
+  },
+  "features": ["24/7 Access", "CCTV", "Security Guard"],
+  "size": {
+    "width": 3,
+    "height": 3,
+    "length": 4,
+    "unit": "meters"
+  },
+  "rating": 4.5,
+  "totalRatings": 12,
+  "images": [
+    "https://via.placeholder.com/400x300?text=Storage+Unit+1",
+    "https://via.placeholder.com/400x300?text=Storage+Unit+2"
+  ],
+  "hostId": "test-host-123",
+  "createdAt": {
+    ".sv": "timestamp"
+  },
+  "updatedAt": {
+    ".sv": "timestamp"
+  },
+  "featured": false,
+  "isAvailable": true
+}

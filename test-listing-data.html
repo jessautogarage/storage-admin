@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Listing Data</title>
+    <script type="module">
+        import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
+        import { getFirestore, collection, getDocs, query, limit } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyAz1WRtqdT_Kz1OZcQnlXp_NU4IeTpNgas",
+            authDomain: "lockifyhub.firebaseapp.com",
+            projectId: "lockifyhub",
+            storageBucket: "lockifyhub.firebasestorage.app",
+            messagingSenderId: "370476953355",
+            appId: "1:370476953355:web:be690c2c9e088b8a3cc1e9"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        async function fetchListings() {
+            try {
+                const listingsRef = collection(db, 'listings');
+                const q = query(listingsRef, limit(5));
+                const querySnapshot = await getDocs(q);
+                
+                const listings = [];
+                querySnapshot.forEach((doc) => {
+                    listings.push({
+                        id: doc.id,
+                        ...doc.data()
+                    });
+                });
+
+                console.log('Fetched listings:', listings);
+                document.getElementById('output').innerHTML = '<pre>' + JSON.stringify(listings, null, 2) + '</pre>';
+                
+                // Log specific image data
+                listings.forEach(listing => {
+                    console.log(`Listing: ${listing.title}`);
+                    console.log('Images field:', listing.images);
+                    console.log('Images type:', typeof listing.images);
+                    if (Array.isArray(listing.images)) {
+                        listing.images.forEach((img, idx) => {
+                            console.log(`  Image ${idx}:`, img);
+                            console.log(`  Type:`, typeof img);
+                        });
+                    }
+                });
+            } catch (error) {
+                console.error('Error fetching listings:', error);
+                document.getElementById('output').innerHTML = 'Error: ' + error.message;
+            }
+        }
+
+        window.addEventListener('load', fetchListings);
+    </script>
+</head>
+<body>
+    <h1>Test Listing Data</h1>
+    <div id="output">Loading...</div>
+</body>
+</html>

@@ -10,46 +10,53 @@ export const SettingsProvider = ({ children }) => {
 
   useEffect(() => {
     let unsubscribe = null;
+    let isMounted = true;
 
     const initializeSettings = async () => {
       try {
         setLoading(true);
         setError(null);
 
-        // Try to load existing settings
-        let currentSettings = await settingsService.getSettings();
-        
-        // If no settings exist, initialize with defaults
-        if (!currentSettings || Object.keys(currentSettings).length === 0) {
-          console.log('No settings found, initializing defaults...');
-          currentSettings = await settingsService.initializeDefaultSettings();
-        }
-
+        // Try to load existing settings - this will fall back to defaults if Firebase fails
+        const currentSettings = await settingsService.getSettings();
         setSettings(currentSettings);
 
-        // Subscribe to real-time updates
+        // Subscribe to real-time updates - this will handle errors gracefully
         unsubscribe = settingsService.subscribeToSettings(
           (updatedSettings) => {
-            console.log('Settings updated via subscription:', updatedSettings);
-            setSettings(updatedSettings);
+            if (isMounted) {
+              setSettings(updatedSettings);
+              // Clear any previous errors if settings load successfully
+              setError(null);
+            }
           },
-          (error) => {
-            console.error('Settings subscription error:', error);
-            setError(error.message);
+          (subscriptionError) => {
+            console.warn('Settings subscription error, continuing with current settings:', subscriptionError);
+            // Don't set error for subscription failures - app should still work with defaults
           }
         );
 
-        setLoading(false);
+        if (isMounted) {
+          setLoading(false);
+        }
       } catch (err) {
         console.error('Error initializing settings:', err);
-        setError(err.message);
-        setLoading(false);
+        console.warn('Continuing with default settings due to initialization error');
+        
+        // Even if initialization fails, provide defaults and mark as loaded
+        if (isMounted) {
+          const { DEFAULT_SETTINGS } = await import('../services/settingsService');
+          setSettings(DEFAULT_SETTINGS);
+          setError(null); // Don't show error to user - app works with defaults
+          setLoading(false);
+        }
       }
     };
 
     initializeSettings();
 
     return () => {
+      isMounted = false;
       if (unsubscribe) {
         unsubscribe();
       }

@@ -1,5 +1,5 @@
 // src/services/chat.js
-import { realtimeDb, db } from './firebase';
+import { realtimeDb, db } from '../utils/firebaseConfig';
 import { 
   ref, 
   push, 

@@ -1,8 +1,12 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../../hooks/useAuth';
 import { User, Camera, Save, MapPin, Phone, Mail, Star, Calendar } from 'lucide-react';
-import HostLayout from '../Layout/HostLayout';
+import ModernHeader from '../Layout/ModernHeader';
 
 const Profile = () => {
+  const navigate = useNavigate();
+  const { user, logout } = useAuth();
   const [isEditing, setIsEditing] = useState(false);
   const [formData, setFormData] = useState({
     displayName: 'John Doe',
@@ -47,38 +51,51 @@ const Profile = () => {
     });
   };
 
+  const handleSignOut = async () => {
+    await logout();
+    navigate('/');
+  };
+
   return (
-    <HostLayout>
-      <div className="p-6">
+    <div className="min-h-screen bg-gray-50">
+      <ModernHeader 
+        variant="host"
+        user={user}
+        onSignIn={() => navigate('/signin')}
+        onSignUp={() => navigate('/signup')}
+        onLogout={handleSignOut}
+      />
+      
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="max-w-4xl mx-auto">
-          {/* Header */}
-          <div className="flex justify-between items-center mb-8">
-            <div>
-              <h1 className="text-3xl font-bold text-gray-900">Profile Settings</h1>
-              <p className="text-gray-600 mt-1">Manage your host profile and information</p>
-            </div>
-            <button
-              onClick={() => isEditing ? handleSave() : setIsEditing(true)}
-              className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-2"
-            >
-              {isEditing ? (
-                <>
-                  <Save size={20} />
-                  Save Changes
-                </>
-              ) : (
-                <>
-                  <User size={20} />
-                  Edit Profile
-                </>
-              )}
-            </button>
+        {/* Header */}
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-8">
+          <div>
+            <h1 className="text-3xl font-bold text-gray-900">Profile Settings</h1>
+            <p className="text-gray-600 mt-1">Manage your host profile and information</p>
           </div>
+          <button
+            onClick={() => isEditing ? handleSave() : setIsEditing(true)}
+            className="mt-4 sm:mt-0 bg-blue-600 text-white px-6 py-3 rounded-xl font-semibold hover:bg-blue-700 transition-colors flex items-center justify-center space-x-2 shadow-sm"
+          >
+            {isEditing ? (
+              <>
+                <Save className="w-5 h-5" />
+                <span>Save Changes</span>
+              </>
+            ) : (
+              <>
+                <User className="w-5 h-5" />
+                <span>Edit Profile</span>
+              </>
+            )}
+          </button>
+        </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
             {/* Profile Card */}
             <div className="lg:col-span-1">
-              <div className="card p-6 text-center">
+              <div className="bg-white rounded-xl shadow-sm border p-6 text-center">
                 {/* Profile Image */}
                 <div className="relative mb-6">
                   <div className="w-32 h-32 bg-blue-100 rounded-full flex items-center justify-center mx-auto">
@@ -139,7 +156,7 @@ const Profile = () => {
 
             {/* Profile Form */}
             <div className="lg:col-span-2">
-              <div className="card p-6">
+              <div className="bg-white rounded-xl shadow-sm border p-6">
                 <h3 className="text-lg font-semibold text-gray-900 mb-6">Personal Information</h3>
                 
                 <form className="space-y-6">
@@ -151,7 +168,7 @@ const Profile = () => {
                       </label>
                       <input
                         type="text"
-                        className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        className="w-full border border-gray-300 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                         value={formData.displayName}
                         onChange={(e) => setFormData(prev => ({ ...prev, displayName: e.target.value }))}
                         disabled={!isEditing}
@@ -176,7 +193,7 @@ const Profile = () => {
                     </label>
                     <input
                       type="tel"
-                      className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      className="w-full border border-gray-300 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                       value={formData.phone}
                       onChange={(e) => setFormData(prev => ({ ...prev, phone: e.target.value }))}
                       disabled={!isEditing}
@@ -190,7 +207,7 @@ const Profile = () => {
                     </label>
                     <input
                       type="text"
-                      className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      className="w-full border border-gray-300 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                       value={formData.address}
                       onChange={(e) => setFormData(prev => ({ ...prev, address: e.target.value }))}
                       disabled={!isEditing}
@@ -204,7 +221,7 @@ const Profile = () => {
                       </label>
                       <input
                         type="text"
-                        className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        className="w-full border border-gray-300 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                         value={formData.city}
                         onChange={(e) => setFormData(prev => ({ ...prev, city: e.target.value }))}
                         disabled={!isEditing}
@@ -216,7 +233,7 @@ const Profile = () => {
                       </label>
                       <input
                         type="text"
-                        className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        className="w-full border border-gray-300 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                         value={formData.state}
                         onChange={(e) => setFormData(prev => ({ ...prev, state: e.target.value }))}
                         disabled={!isEditing}
@@ -228,7 +245,7 @@ const Profile = () => {
                       </label>
                       <input
                         type="text"
-                        className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        className="w-full border border-gray-300 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                         value={formData.zipCode}
                         onChange={(e) => setFormData(prev => ({ ...prev, zipCode: e.target.value }))}
                         disabled={!isEditing}
@@ -243,7 +260,7 @@ const Profile = () => {
                     </label>
                     <textarea
                       rows={4}
-                      className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      className="w-full border border-gray-300 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                       placeholder="Tell potential clients about yourself and your hosting experience..."
                       value={formData.bio}
                       onChange={(e) => setFormData(prev => ({ ...prev, bio: e.target.value }))}
@@ -315,7 +332,7 @@ const Profile = () => {
           </div>
         </div>
       </div>
-    </HostLayout>
+    </div>
   );
 };
 

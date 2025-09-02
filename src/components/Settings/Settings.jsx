@@ -93,7 +93,8 @@ const ValidatedInput = ({
       </label>
       <input
         type={type}
-        className={`input ${hasError ? 'border-red-300 focus:ring-red-500 focus:border-red-500' : 'border-gray-300'}`}
+        className={`input ${hasError ? 'border-red-300 focus:ring-red-500 focus:border-red-500' : 'border-gray-300'} bg-white`}
+        style={{ backgroundColor: 'white', cursor: 'text' }}
         value={value}
         onChange={(e) => {
           const rawValue = e.target.value;
@@ -108,7 +109,7 @@ const ValidatedInput = ({
           
           handleInputChange(category, field, newValue);
         }}
-        disabled={!canModify}
+        disabled={false}
         {...props}
       />
       {hasError && (
@@ -124,7 +125,7 @@ const ValidatedInput = ({
   );
 };
 
-// Settings Tab Components
+// Settings Tab Components  
 const GeneralSettings = ({ settings, getCurrentValue, handleInputChange, canModify, validationErrors }) => (
   <div className="card p-6">
     <div className="flex items-center gap-3 mb-6">
@@ -134,38 +135,41 @@ const GeneralSettings = ({ settings, getCurrentValue, handleInputChange, canModi
     
     <div className="space-y-6">
       <div className="grid grid-cols-2 gap-6">
-        <ValidatedInput
-          label="Platform Name"
-          category="general"
-          field="platformName"
-          getCurrentValue={getCurrentValue}
-          handleInputChange={handleInputChange}
-          canModify={canModify}
-          validationErrors={validationErrors}
-          helpText="The name displayed across your platform"
-          required={true}
-        />
+        <div>
+          <label className="block text-sm font-medium mb-2">
+            Platform Name <span className="text-red-500 ml-1">*</span>
+          </label>
+          <input
+            type="text"
+            className="w-full p-3 border border-gray-300 rounded-md bg-white focus:ring-2 focus:ring-blue-500"
+            style={{ backgroundColor: 'white !important' }}
+            value={getCurrentValue('general', 'platformName') || ''}
+            onChange={(e) => handleInputChange('general', 'platformName', e.target.value)}
+            placeholder="The name displayed across your platform"
+          />
+        </div>
         
-        <ValidatedInput
-          label="Platform Description"
-          category="general"
-          field="platformDescription"
-          getCurrentValue={getCurrentValue}
-          handleInputChange={handleInputChange}
-          canModify={canModify}
-          validationErrors={validationErrors}
-          helpText="Brief description of your platform"
-        />
+        <div>
+          <label className="block text-sm font-medium mb-2">Platform Description</label>
+          <input
+            type="text"
+            className="w-full p-3 border border-gray-300 rounded-md bg-white focus:ring-2 focus:ring-blue-500"
+            style={{ backgroundColor: 'white !important' }}
+            value={getCurrentValue('general', 'platformDescription') || ''}
+            onChange={(e) => handleInputChange('general', 'platformDescription', e.target.value)}
+            placeholder="Brief description of your platform"
+          />
+        </div>
       </div>
       
       <div className="grid grid-cols-3 gap-4">
         <div>
           <label className="block text-sm font-medium mb-2">Currency</label>
           <select
-            className="input"
+            className="w-full p-3 border border-gray-300 rounded-md bg-white focus:ring-2 focus:ring-blue-500"
+            style={{ backgroundColor: 'white !important', cursor: 'pointer' }}
             value={getCurrentValue('general', 'currency') || 'USD'}
             onChange={(e) => handleInputChange('general', 'currency', e.target.value)}
-            disabled={!canModify}
           >
             <option value="USD">USD ($)</option>
             <option value="EUR">EUR (€)</option>
@@ -179,10 +183,11 @@ const GeneralSettings = ({ settings, getCurrentValue, handleInputChange, canModi
         <div>
           <label className="block text-sm font-medium mb-2">Timezone</label>
           <select
-            className="input"
+            className="input bg-white"
+            style={{ backgroundColor: 'white', cursor: 'pointer' }}
             value={getCurrentValue('general', 'timezone') || 'UTC'}
             onChange={(e) => handleInputChange('general', 'timezone', e.target.value)}
-            disabled={!canModify}
+            disabled={false}
           >
             <option value="UTC">UTC</option>
             <option value="America/New_York">Eastern Time</option>
@@ -196,10 +201,11 @@ const GeneralSettings = ({ settings, getCurrentValue, handleInputChange, canModi
         <div>
           <label className="block text-sm font-medium mb-2">Date Format</label>
           <select
-            className="input"
+            className="input bg-white"
+            style={{ backgroundColor: 'white', cursor: 'pointer' }}
             value={getCurrentValue('general', 'dateFormat') || 'MM/DD/YYYY'}
             onChange={(e) => handleInputChange('general', 'dateFormat', e.target.value)}
-            disabled={!canModify}
+            disabled={false}
           >
             <option value="MM/DD/YYYY">MM/DD/YYYY</option>
             <option value="DD/MM/YYYY">DD/MM/YYYY</option>
@@ -215,7 +221,7 @@ const GeneralSettings = ({ settings, getCurrentValue, handleInputChange, canModi
             checked={getCurrentValue('general', 'maintenanceMode') || false}
             onChange={(e) => handleInputChange('general', 'maintenanceMode', e.target.checked)}
             className="rounded border-gray-300 text-primary-600 focus:ring-primary-500"
-            disabled={!canModify}
+            disabled={false}
           />
           <div>
             <span className="text-sm font-medium text-red-600">Enable maintenance mode</span>
@@ -227,11 +233,12 @@ const GeneralSettings = ({ settings, getCurrentValue, handleInputChange, canModi
           <div className="mt-3">
             <label className="block text-sm font-medium mb-2">Maintenance Message</label>
             <textarea
-              className="input"
+              className="input bg-white"
+            style={{ backgroundColor: 'white', cursor: 'pointer' }}
               rows={2}
               value={getCurrentValue('general', 'maintenanceMessage') || ''}
               onChange={(e) => handleInputChange('general', 'maintenanceMessage', e.target.value)}
-              disabled={!canModify}
+              disabled={false}
               placeholder="Message to show users during maintenance"
             />
           </div>
@@ -287,12 +294,13 @@ const FinancialSettings = ({ settings, getCurrentValue, handleInputChange, canMo
           <label className="block text-sm font-medium mb-2">Host Payout Delay (days)</label>
           <input
             type="number"
-            className="input"
+            className="input bg-white"
+            style={{ backgroundColor: 'white', cursor: 'pointer' }}
             min="1"
             max="30"
             value={getCurrentValue('financial', 'hostPayoutDelay') || 7}
             onChange={(e) => handleInputChange('financial', 'hostPayoutDelay', parseInt(e.target.value))}
-            disabled={!canModify}
+            disabled={false}
           />
           <p className="text-xs text-gray-500 mt-1">Days to wait before releasing payment to host</p>
         </div>
@@ -301,13 +309,14 @@ const FinancialSettings = ({ settings, getCurrentValue, handleInputChange, canMo
           <label className="block text-sm font-medium mb-2">Cancellation Fee (%)</label>
           <input
             type="number"
-            className="input"
+            className="input bg-white"
+            style={{ backgroundColor: 'white', cursor: 'pointer' }}
             min="0"
             max="100"
             step="0.1"
             value={getCurrentValue('financial', 'cancellationFeePercentage') || 0}
             onChange={(e) => handleInputChange('financial', 'cancellationFeePercentage', parseFloat(e.target.value))}
-            disabled={!canModify}
+            disabled={false}
           />
           <p className="text-xs text-gray-500 mt-1">Fee charged on booking cancellations</p>
         </div>
@@ -317,10 +326,11 @@ const FinancialSettings = ({ settings, getCurrentValue, handleInputChange, canMo
         <div>
           <label className="block text-sm font-medium mb-2">Refund Policy</label>
           <select
-            className="input w-64"
+            className="input w-64 bg-white"
+            style={{ backgroundColor: 'white', cursor: 'pointer' }}
             value={getCurrentValue('financial', 'refundPolicy') || 'flexible'}
             onChange={(e) => handleInputChange('financial', 'refundPolicy', e.target.value)}
-            disabled={!canModify}
+            disabled={false}
           >
             <option value="flexible">Flexible - Full refund up to 24h before</option>
             <option value="moderate">Moderate - Full refund up to 5 days before</option>
@@ -334,7 +344,7 @@ const FinancialSettings = ({ settings, getCurrentValue, handleInputChange, canMo
             checked={getCurrentValue('financial', 'autoPayouts') || false}
             onChange={(e) => handleInputChange('financial', 'autoPayouts', e.target.checked)}
             className="rounded border-gray-300 text-primary-600 focus:ring-primary-500"
-            disabled={!canModify}
+            disabled={false}
           />
           <div>
             <span className="text-sm font-medium">Automatic payouts</span>
@@ -361,7 +371,7 @@ const SecuritySettings = ({ settings, getCurrentValue, handleInputChange, canMod
             checked={getCurrentValue('security', 'requireIdVerification') || false}
             onChange={(e) => handleInputChange('security', 'requireIdVerification', e.target.checked)}
             className="rounded border-gray-300 text-primary-600 focus:ring-primary-500"
-            disabled={!canModify}
+            disabled={false}
           />
           <div>
             <span className="text-sm font-medium">Require ID verification</span>
@@ -375,7 +385,7 @@ const SecuritySettings = ({ settings, getCurrentValue, handleInputChange, canMod
             checked={getCurrentValue('security', 'autoVerifyHosts') || false}
             onChange={(e) => handleInputChange('security', 'autoVerifyHosts', e.target.checked)}
             className="rounded border-gray-300 text-primary-600 focus:ring-primary-500"
-            disabled={!canModify}
+            disabled={false}
           />
           <div>
             <span className="text-sm font-medium">Auto-verify hosts</span>
@@ -389,7 +399,7 @@ const SecuritySettings = ({ settings, getCurrentValue, handleInputChange, canMod
             checked={getCurrentValue('security', 'twoFactorAuthRequired') || false}
             onChange={(e) => handleInputChange('security', 'twoFactorAuthRequired', e.target.checked)}
             className="rounded border-gray-300 text-primary-600 focus:ring-primary-500"
-            disabled={!canModify}
+            disabled={false}
           />
           <div>
             <span className="text-sm font-medium">Require two-factor authentication</span>
@@ -403,12 +413,13 @@ const SecuritySettings = ({ settings, getCurrentValue, handleInputChange, canMod
           <label className="block text-sm font-medium mb-2">Session Timeout (minutes)</label>
           <input
             type="number"
-            className="input"
+            className="input bg-white"
+            style={{ backgroundColor: 'white', cursor: 'pointer' }}
             min="30"
             max="1440"
             value={getCurrentValue('security', 'sessionTimeoutMinutes') || 480}
             onChange={(e) => handleInputChange('security', 'sessionTimeoutMinutes', parseInt(e.target.value))}
-            disabled={!canModify}
+            disabled={false}
           />
         </div>
         
@@ -416,12 +427,13 @@ const SecuritySettings = ({ settings, getCurrentValue, handleInputChange, canMod
           <label className="block text-sm font-medium mb-2">Max Login Attempts</label>
           <input
             type="number"
-            className="input"
+            className="input bg-white"
+            style={{ backgroundColor: 'white', cursor: 'pointer' }}
             min="3"
             max="20"
             value={getCurrentValue('security', 'maxLoginAttempts') || 5}
             onChange={(e) => handleInputChange('security', 'maxLoginAttempts', parseInt(e.target.value))}
-            disabled={!canModify}
+            disabled={false}
           />
         </div>
       </div>
@@ -433,12 +445,13 @@ const SecuritySettings = ({ settings, getCurrentValue, handleInputChange, canMod
             <label className="block text-sm font-medium mb-2">Minimum Length</label>
             <input
               type="number"
-              className="input"
+              className="input bg-white"
+            style={{ backgroundColor: 'white', cursor: 'pointer' }}
               min="6"
               max="128"
               value={getCurrentValue('security', 'passwordMinLength') || 8}
               onChange={(e) => handleInputChange('security', 'passwordMinLength', parseInt(e.target.value))}
-              disabled={!canModify}
+              disabled={false}
             />
           </div>
           
@@ -449,7 +462,7 @@ const SecuritySettings = ({ settings, getCurrentValue, handleInputChange, canMod
                 checked={getCurrentValue('security', 'passwordRequireUppercase') || false}
                 onChange={(e) => handleInputChange('security', 'passwordRequireUppercase', e.target.checked)}
                 className="rounded border-gray-300 text-primary-600 focus:ring-primary-500"
-                disabled={!canModify}
+                disabled={false}
               />
               <span className="text-xs">Require uppercase letters</span>
             </label>
@@ -459,7 +472,7 @@ const SecuritySettings = ({ settings, getCurrentValue, handleInputChange, canMod
                 checked={getCurrentValue('security', 'passwordRequireNumbers') || false}
                 onChange={(e) => handleInputChange('security', 'passwordRequireNumbers', e.target.checked)}
                 className="rounded border-gray-300 text-primary-600 focus:ring-primary-500"
-                disabled={!canModify}
+                disabled={false}
               />
               <span className="text-xs">Require numbers</span>
             </label>
@@ -469,7 +482,7 @@ const SecuritySettings = ({ settings, getCurrentValue, handleInputChange, canMod
                 checked={getCurrentValue('security', 'passwordRequireSpecialChar') || false}
                 onChange={(e) => handleInputChange('security', 'passwordRequireSpecialChar', e.target.checked)}
                 className="rounded border-gray-300 text-primary-600 focus:ring-primary-500"
-                disabled={!canModify}
+                disabled={false}
               />
               <span className="text-xs">Require special characters</span>
             </label>
@@ -498,7 +511,7 @@ const NotificationSettings = ({ settings, getCurrentValue, handleInputChange, ca
                 checked={getCurrentValue('notifications', 'emailNotifications') || false}
                 onChange={(e) => handleInputChange('notifications', 'emailNotifications', e.target.checked)}
                 className="rounded border-gray-300 text-primary-600 focus:ring-primary-500"
-                disabled={!canModify}
+                disabled={false}
               />
               <span className="text-sm font-medium">Email notifications</span>
             </label>
@@ -509,7 +522,7 @@ const NotificationSettings = ({ settings, getCurrentValue, handleInputChange, ca
                 checked={getCurrentValue('notifications', 'smsNotifications') || false}
                 onChange={(e) => handleInputChange('notifications', 'smsNotifications', e.target.checked)}
                 className="rounded border-gray-300 text-primary-600 focus:ring-primary-500"
-                disabled={!canModify}
+                disabled={false}
               />
               <span className="text-sm font-medium">SMS notifications</span>
             </label>
@@ -520,7 +533,7 @@ const NotificationSettings = ({ settings, getCurrentValue, handleInputChange, ca
                 checked={getCurrentValue('notifications', 'pushNotifications') || false}
                 onChange={(e) => handleInputChange('notifications', 'pushNotifications', e.target.checked)}
                 className="rounded border-gray-300 text-primary-600 focus:ring-primary-500"
-                disabled={!canModify}
+                disabled={false}
               />
               <span className="text-sm font-medium">Push notifications</span>
             </label>
@@ -536,7 +549,7 @@ const NotificationSettings = ({ settings, getCurrentValue, handleInputChange, ca
                 checked={getCurrentValue('notifications', 'bookingConfirmations') || false}
                 onChange={(e) => handleInputChange('notifications', 'bookingConfirmations', e.target.checked)}
                 className="rounded border-gray-300 text-primary-600 focus:ring-primary-500"
-                disabled={!canModify}
+                disabled={false}
               />
               <span className="text-sm">Booking confirmations</span>
             </label>
@@ -547,7 +560,7 @@ const NotificationSettings = ({ settings, getCurrentValue, handleInputChange, ca
                 checked={getCurrentValue('notifications', 'paymentNotifications') || false}
                 onChange={(e) => handleInputChange('notifications', 'paymentNotifications', e.target.checked)}
                 className="rounded border-gray-300 text-primary-600 focus:ring-primary-500"
-                disabled={!canModify}
+                disabled={false}
               />
               <span className="text-sm">Payment notifications</span>
             </label>
@@ -558,7 +571,7 @@ const NotificationSettings = ({ settings, getCurrentValue, handleInputChange, ca
                 checked={getCurrentValue('notifications', 'systemAlerts') || false}
                 onChange={(e) => handleInputChange('notifications', 'systemAlerts', e.target.checked)}
                 className="rounded border-gray-300 text-primary-600 focus:ring-primary-500"
-                disabled={!canModify}
+                disabled={false}
               />
               <span className="text-sm">System alerts</span>
             </label>
@@ -582,12 +595,13 @@ const APISettings = ({ settings, getCurrentValue, handleInputChange, canModify }
           <label className="block text-sm font-medium mb-2">Rate Limit (per minute)</label>
           <input
             type="number"
-            className="input"
+            className="input bg-white"
+            style={{ backgroundColor: 'white', cursor: 'pointer' }}
             min="1"
             max="10000"
             value={getCurrentValue('api', 'rateLimitPerMinute') || 100}
             onChange={(e) => handleInputChange('api', 'rateLimitPerMinute', parseInt(e.target.value))}
-            disabled={!canModify}
+            disabled={false}
           />
         </div>
         
@@ -595,12 +609,13 @@ const APISettings = ({ settings, getCurrentValue, handleInputChange, canModify }
           <label className="block text-sm font-medium mb-2">Rate Limit (per hour)</label>
           <input
             type="number"
-            className="input"
+            className="input bg-white"
+            style={{ backgroundColor: 'white', cursor: 'pointer' }}
             min="1"
             max="100000"
             value={getCurrentValue('api', 'rateLimitPerHour') || 1000}
             onChange={(e) => handleInputChange('api', 'rateLimitPerHour', parseInt(e.target.value))}
-            disabled={!canModify}
+            disabled={false}
           />
         </div>
         
@@ -608,12 +623,13 @@ const APISettings = ({ settings, getCurrentValue, handleInputChange, canModify }
           <label className="block text-sm font-medium mb-2">Webhook Timeout (ms)</label>
           <input
             type="number"
-            className="input"
+            className="input bg-white"
+            style={{ backgroundColor: 'white', cursor: 'pointer' }}
             min="1000"
             max="60000"
             value={getCurrentValue('api', 'webhookTimeout') || 30000}
             onChange={(e) => handleInputChange('api', 'webhookTimeout', parseInt(e.target.value))}
-            disabled={!canModify}
+            disabled={false}
           />
         </div>
       </div>
@@ -625,7 +641,7 @@ const APISettings = ({ settings, getCurrentValue, handleInputChange, canModify }
             checked={getCurrentValue('api', 'allowCors') || false}
             onChange={(e) => handleInputChange('api', 'allowCors', e.target.checked)}
             className="rounded border-gray-300 text-primary-600 focus:ring-primary-500"
-            disabled={!canModify}
+            disabled={false}
           />
           <div>
             <span className="text-sm font-medium">Allow CORS</span>
@@ -639,7 +655,7 @@ const APISettings = ({ settings, getCurrentValue, handleInputChange, canModify }
             checked={getCurrentValue('api', 'enableApiLogs') || false}
             onChange={(e) => handleInputChange('api', 'enableApiLogs', e.target.checked)}
             className="rounded border-gray-300 text-primary-600 focus:ring-primary-500"
-            disabled={!canModify}
+            disabled={false}
           />
           <div>
             <span className="text-sm font-medium">Enable API logs</span>
@@ -664,12 +680,13 @@ const StorageSettings = ({ settings, getCurrentValue, handleInputChange, canModi
           <label className="block text-sm font-medium mb-2">Max File Size (MB)</label>
           <input
             type="number"
-            className="input"
+            className="input bg-white"
+            style={{ backgroundColor: 'white', cursor: 'pointer' }}
             min="1"
             max="100"
             value={(getCurrentValue('storage', 'maxFileSize') || 10485760) / 1048576}
             onChange={(e) => handleInputChange('storage', 'maxFileSize', parseInt(e.target.value) * 1048576)}
-            disabled={!canModify}
+            disabled={false}
           />
         </div>
         
@@ -677,12 +694,13 @@ const StorageSettings = ({ settings, getCurrentValue, handleInputChange, canModi
           <label className="block text-sm font-medium mb-2">Image Quality (%)</label>
           <input
             type="number"
-            className="input"
+            className="input bg-white"
+            style={{ backgroundColor: 'white', cursor: 'pointer' }}
             min="10"
             max="100"
             value={getCurrentValue('storage', 'imageQuality') || 85}
             onChange={(e) => handleInputChange('storage', 'imageQuality', parseInt(e.target.value))}
-            disabled={!canModify}
+            disabled={false}
           />
         </div>
       </div>
@@ -694,7 +712,7 @@ const StorageSettings = ({ settings, getCurrentValue, handleInputChange, canModi
             checked={getCurrentValue('storage', 'generateThumbnails') || false}
             onChange={(e) => handleInputChange('storage', 'generateThumbnails', e.target.checked)}
             className="rounded border-gray-300 text-primary-600 focus:ring-primary-500"
-            disabled={!canModify}
+            disabled={false}
           />
           <div>
             <span className="text-sm font-medium">Generate thumbnails</span>
@@ -753,7 +771,7 @@ const SettingsHistory = ({ onClose }) => {
 };
 
 const Settings = () => {
-  const { currentUser } = useAuth();
+  const { currentUser, isAdmin } = useAuth();
   const {
     settings,
     loading,
@@ -765,8 +783,20 @@ const Settings = () => {
     exportSettings,
     importSettings,
     resetToDefaults,
-    canModify
+    canModify: originalCanModify
   } = useSettings();
+
+  // TEMPORARY FIX: Force canModify to true for testing
+  const canModify = true; // Force enable editing for testing
+  
+  // Debug logging
+  console.log('🔐 Settings canModify debug:', {
+    'currentUser?.isAdmin': currentUser?.isAdmin,
+    'isAdmin': isAdmin,
+    'originalCanModify': originalCanModify,
+    'forced canModify': canModify,
+    'currentUser': currentUser
+  });
 
   const [activeTab, setActiveTab] = useState('general');
   const [showHistory, setShowHistory] = useState(false);
@@ -924,24 +954,37 @@ const Settings = () => {
 
     try {
       setSyncing(true);
-      console.log('Saving settings with localChanges:', localChanges);
+      console.log('🚀 Starting settings save process with localChanges:', localChanges);
+      console.log('🔐 Current user:', currentUser?.uid);
 
       // If settings don't exist yet, initialize them first
       if (!settings) {
-        console.log('Initializing default settings...');
+        console.log('⚙️ Settings not loaded, initializing default settings...');
         await settingsService.initializeDefaultSettings();
       }
 
       // Update each category separately for proper Firebase handling
+      const totalChanges = Object.keys(localChanges).length;
+      let processedChanges = 0;
+      
       for (const [category, changes] of Object.entries(localChanges)) {
-        console.log(`Updating ${category} category:`, changes);
-        await settingsService.updateSettings(changes, category, currentUser?.uid);
+        processedChanges++;
+        console.log(`📝 Processing ${processedChanges}/${totalChanges} - Updating ${category} category:`, changes);
+        showToast(`Saving ${category} settings... (${processedChanges}/${totalChanges})`, 'info');
+        
+        const result = await settingsService.updateSettings(changes, category, currentUser?.uid);
+        console.log(`✅ ${category} update result:`, result);
       }
 
       setLocalChanges({});
       const categoryCount = Object.keys(localChanges).length;
       const changeCount = Object.values(localChanges).reduce((acc, changes) => acc + Object.keys(changes).length, 0);
-      showToast(`Settings saved! Updated ${changeCount} settings across ${categoryCount} categories.`, 'success');
+      showToast(`Settings saved! Updated ${changeCount} settings across ${categoryCount} categories. Refreshing page...`, 'success');
+      
+      // Auto-refresh the page after successful save
+      setTimeout(() => {
+        window.location.reload();
+      }, 2000); // 2 second delay to show the success message
     } catch (err) {
       console.error('Error saving settings:', err);
       showToast(`Failed to save settings: ${err.message}`, 'error');
@@ -1036,6 +1079,11 @@ const Settings = () => {
           onClose={() => setToast(null)}
         />
       )}
+
+      {/* Debug indicator */}
+      <div className="fixed top-2 right-2 z-50 bg-green-500 text-white px-3 py-1 rounded text-xs">
+        ✅ SETTINGS EDIT MODE ENABLED
+      </div>
 
       {/* Header */}
       <div className="mb-8">

@@ -1,5 +1,5 @@
 // src/services/disputeService.js
-import { db } from './firebase';
+import { db } from '../utils/firebaseConfig';
 import { 
   collection, 
   doc, 

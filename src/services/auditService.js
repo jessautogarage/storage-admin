@@ -1,5 +1,5 @@
 // src/services/auditService.js
-import { db, auth } from './firebase';
+import { db, auth } from '../utils/firebaseConfig';
 import { 
   collection, 
   addDoc, 

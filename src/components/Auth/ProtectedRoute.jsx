@@ -24,7 +24,11 @@ const ProtectedRoute = ({ children, allowedRoles = ['admin'], requireAdmin = tru
   }
 
   // For admin routes, check if user has admin privileges
-  if (requireAdmin && !user.isAdmin) {
+  // Check both isAdmin flag and userType/type fields
+  const userType = user.userType || user.type || user.role;
+  const isAdmin = user.isAdmin || userType === 'admin';
+  
+  if (requireAdmin && !isAdmin) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">

@@ -23,7 +23,7 @@ const AddListingComplete = () => {
     city: '',
     state: '',
     zipCode: '',
-    pricePerMonth: '',
+    pricePerDay: '',
     size: '',
     storageType: 'indoor',
     features: [],
@@ -141,7 +141,7 @@ const AddListingComplete = () => {
         hostName: user.displayName || user.email,
         hostEmail: user.email,
         images: imageUrls,
-        pricePerMonth: parseFloat(formData.pricePerMonth),
+        pricePerDay: parseFloat(formData.pricePerDay),
         size: parseFloat(formData.size),
         securityDeposit: formData.securityDeposit ? parseFloat(formData.securityDeposit) : 0,
         minimumRental: parseInt(formData.minimumRental),
@@ -175,7 +175,7 @@ const AddListingComplete = () => {
         timestamp: serverTimestamp(),
         details: {
           title: formData.title,
-          price: formData.pricePerMonth
+          price: formData.pricePerDay
         }
       });
 
@@ -356,7 +356,7 @@ const AddListingComplete = () => {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Monthly Price ($) *
+                    Daily Price ($) *
                   </label>
                   <input
                     type="number"
@@ -364,8 +364,8 @@ const AddListingComplete = () => {
                     step="0.01"
                     className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
                     placeholder="150.00"
-                    value={formData.pricePerMonth}
-                    onChange={(e) => setFormData(prev => ({ ...prev, pricePerMonth: e.target.value }))}
+                    value={formData.pricePerDay}
+                    onChange={(e) => setFormData(prev => ({ ...prev, pricePerDay: e.target.value }))}
                     required
                   />
                 </div>
@@ -399,7 +399,7 @@ const AddListingComplete = () => {
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Minimum Rental (months)
+                    Minimum Rental (days)
                   </label>
                   <input
                     type="number"

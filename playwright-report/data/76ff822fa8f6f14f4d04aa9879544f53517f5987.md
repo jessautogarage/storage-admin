@@ -1,0 +1,178 @@
+# Page snapshot
+
+```yaml
+- generic [ref=e3]:
+  - banner [ref=e4]:
+    - generic [ref=e6]:
+      - link "L LockifyHub" [ref=e8] [cursor=pointer]:
+        - /url: /
+        - generic [ref=e10] [cursor=pointer]: L
+        - generic [ref=e11] [cursor=pointer]: LockifyHub
+      - navigation [ref=e13]:
+        - link "Browse Storage" [ref=e14] [cursor=pointer]:
+          - /url: /client/browse
+          - img [ref=e15] [cursor=pointer]
+          - text: Browse Storage
+        - link "My Bookings" [ref=e18] [cursor=pointer]:
+          - /url: /client/bookings
+          - img [ref=e19] [cursor=pointer]
+          - text: My Bookings
+        - link "Favorites" [ref=e21] [cursor=pointer]:
+          - /url: /client/favorites
+          - img [ref=e22] [cursor=pointer]
+          - text: Favorites
+        - link "Messages" [ref=e24] [cursor=pointer]:
+          - /url: /client/messages
+          - img [ref=e25] [cursor=pointer]
+          - text: Messages
+      - button "TestFinal Client" [ref=e29] [cursor=pointer]:
+        - img [ref=e31] [cursor=pointer]
+        - generic [ref=e34] [cursor=pointer]: TestFinal Client
+  - generic [ref=e35]:
+    - generic [ref=e37]:
+      - generic [ref=e38]:
+        - heading "Welcome back, TestFinal Client!" [level=1] [ref=e39]
+        - paragraph [ref=e40]: Find the perfect storage space for your needs
+      - button "1" [ref=e42] [cursor=pointer]:
+        - img [ref=e43] [cursor=pointer]
+        - generic [ref=e46] [cursor=pointer]: "1"
+    - generic [ref=e47]:
+      - generic [ref=e49]:
+        - img [ref=e51]
+        - generic [ref=e53]:
+          - paragraph [ref=e54]: Active Bookings
+          - paragraph [ref=e55]: "0"
+      - generic [ref=e57]:
+        - img [ref=e59]
+        - generic [ref=e61]:
+          - paragraph [ref=e62]: Total Spent
+          - paragraph [ref=e63]: ₱0
+      - generic [ref=e65]:
+        - img [ref=e67]
+        - generic [ref=e69]:
+          - paragraph [ref=e70]: Favorite Spaces
+          - paragraph [ref=e71]: "0"
+      - generic [ref=e73]:
+        - img [ref=e75]
+        - generic [ref=e77]:
+          - paragraph [ref=e78]: Reviews Given
+          - paragraph [ref=e79]: "0"
+    - generic [ref=e80]:
+      - generic [ref=e81]:
+        - generic [ref=e82]:
+          - heading "Need more storage space?" [level=2] [ref=e83]
+          - paragraph [ref=e84]: Find secure, affordable storage in your neighborhood
+          - button "Browse Storage Spaces" [ref=e85] [cursor=pointer]:
+            - img [ref=e86] [cursor=pointer]
+            - generic [ref=e89] [cursor=pointer]: Browse Storage Spaces
+        - generic [ref=e90]:
+          - generic [ref=e91]:
+            - heading "Recent Bookings" [level=3] [ref=e92]
+            - button "View all" [ref=e93] [cursor=pointer]:
+              - generic [ref=e94] [cursor=pointer]: View all
+              - img [ref=e95] [cursor=pointer]
+          - generic [ref=e98]:
+            - img [ref=e99]
+            - paragraph [ref=e103]: No bookings yet
+            - button "Browse available spaces →" [ref=e104] [cursor=pointer]
+        - generic [ref=e105]:
+          - generic [ref=e106]:
+            - heading "Recommended for You" [level=3] [ref=e107]
+            - button "See more" [ref=e108] [cursor=pointer]:
+              - generic [ref=e109] [cursor=pointer]: See more
+              - img [ref=e110] [cursor=pointer]
+          - generic [ref=e113]:
+            - img "1 Room Storage for Parcels" [ref=e114]
+            - generic [ref=e115]:
+              - heading "1 Room Storage for Parcels" [level=4] [ref=e116]
+              - generic [ref=e117]:
+                - img [ref=e118]
+                - generic [ref=e121]: South Cotabato, Location
+              - generic [ref=e122]:
+                - generic [ref=e123]: ₱100/day
+                - generic [ref=e124]:
+                  - img [ref=e125]
+                  - generic [ref=e127]: 4.5 (0)
+              - generic [ref=e129]: 24/7 Access
+              - button "View Details" [ref=e130] [cursor=pointer]:
+                - img [ref=e131] [cursor=pointer]
+                - generic [ref=e134] [cursor=pointer]: View Details
+      - generic [ref=e135]:
+        - generic [ref=e136]:
+          - heading "Quick Actions" [level=3] [ref=e137]
+          - generic [ref=e138]:
+            - button "Find Storage" [ref=e139] [cursor=pointer]:
+              - img [ref=e140] [cursor=pointer]
+              - generic [ref=e143] [cursor=pointer]: Find Storage
+            - button "My Bookings" [ref=e144] [cursor=pointer]:
+              - img [ref=e145] [cursor=pointer]
+              - generic [ref=e147] [cursor=pointer]: My Bookings
+            - button "Favorites" [ref=e148] [cursor=pointer]:
+              - img [ref=e149] [cursor=pointer]
+              - generic [ref=e151] [cursor=pointer]: Favorites
+            - button "Messages" [ref=e152] [cursor=pointer]:
+              - img [ref=e153] [cursor=pointer]
+              - generic [ref=e155] [cursor=pointer]: Messages
+        - generic [ref=e156]:
+          - generic [ref=e157]:
+            - heading "Favorite Spaces" [level=3] [ref=e158]
+            - button "View all" [ref=e159] [cursor=pointer]:
+              - generic [ref=e160] [cursor=pointer]: View all
+              - img [ref=e161] [cursor=pointer]
+          - generic [ref=e164]:
+            - img [ref=e165]
+            - paragraph [ref=e167]: No favorite spaces yet
+            - button "Browse spaces to add favorites →" [ref=e168] [cursor=pointer]
+        - generic [ref=e169]:
+          - heading "Complete Your Profile" [level=3] [ref=e170]:
+            - img [ref=e171]
+            - generic [ref=e174]: Complete Your Profile
+          - generic [ref=e176]:
+            - generic [ref=e177]: Profile Completion
+            - generic [ref=e178]: 50%
+          - paragraph [ref=e181]: Complete your profile to build trust with hosts and get better booking rates.
+          - button "Complete Profile" [ref=e182] [cursor=pointer]
+        - generic [ref=e183]:
+          - generic [ref=e184]:
+            - heading "Recent Notifications 1" [level=3] [ref=e185]:
+              - img [ref=e186]
+              - generic [ref=e189]: Recent Notifications
+              - generic [ref=e190]: "1"
+            - button "View all" [ref=e191] [cursor=pointer]
+          - generic [ref=e196] [cursor=pointer]:
+            - heading "Welcome to LockifyHub!" [level=4] [ref=e197] [cursor=pointer]
+            - paragraph [ref=e198] [cursor=pointer]: Your client dashboard is ready.
+            - paragraph [ref=e199] [cursor=pointer]: Just now
+        - generic [ref=e200]:
+          - generic [ref=e201]:
+            - heading "Recent Messages" [level=3] [ref=e202]:
+              - img [ref=e203]
+              - generic [ref=e205]: Recent Messages
+            - button "View all" [ref=e206] [cursor=pointer]
+          - generic [ref=e208]:
+            - img [ref=e209]
+            - paragraph [ref=e211]: No messages yet
+        - generic [ref=e212]:
+          - generic [ref=e213]:
+            - heading "Payment History" [level=3] [ref=e214]:
+              - img [ref=e215]
+              - generic [ref=e217]: Payment History
+            - button "View all" [ref=e218] [cursor=pointer]
+          - generic [ref=e220]:
+            - generic [ref=e221]:
+              - heading "No payments yet" [level=4] [ref=e222]
+              - paragraph [ref=e223]: GCASH •
+              - paragraph [ref=e224]: 9/1/2025
+            - generic [ref=e225]:
+              - paragraph [ref=e226]: ₱0
+              - paragraph [ref=e227]: Pending
+        - generic [ref=e228]:
+          - heading "Storage Tips" [level=3] [ref=e229]:
+            - img [ref=e230]
+            - generic [ref=e232]: Storage Tips
+          - generic [ref=e233]:
+            - paragraph [ref=e234]: 💡 Book early for better rates and availability
+            - paragraph [ref=e235]: 🔒 Always check security features before booking
+            - paragraph [ref=e236]: 📱 Use our mobile app for instant access codes
+          - button "Learn more →" [ref=e237] [cursor=pointer]
+```

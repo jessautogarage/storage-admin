@@ -299,7 +299,11 @@ const ListingManagement = () => {
                       )}
                       <div>
                         <div className="text-sm font-medium text-gray-900">{listing.title}</div>
-                        <div className="text-sm text-gray-500">{listing.size}</div>
+                        <div className="text-sm text-gray-500">
+                          {typeof listing.size === 'object' && listing.size !== null 
+                            ? `${listing.size.value || ''}${listing.size.unit ? ' ' + listing.size.unit : ''}`
+                            : listing.size || 'N/A'}
+                        </div>
                       </div>
                     </div>
                   </td>
